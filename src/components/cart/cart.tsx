@@ -2,9 +2,10 @@ import { useCart } from "@/hooks/useCart";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Trash2 } from "lucide-react";
+import { Trash2, ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
+import Link from "next/link";
 
 export function Cart() {
   const { cart, isLoading, updateCartItem, removeFromCart, clearCart } =
@@ -13,6 +14,13 @@ export function Cart() {
   if (isLoading) {
     return (
       <div className="space-y-4">
+        <Link
+          href="/products"
+          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Voltar para produtos
+        </Link>
         <div className="flex justify-between items-center">
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-10 w-32" />
@@ -40,14 +48,23 @@ export function Cart() {
 
   if (!cart || cart.length === 0) {
     return (
-      <div className="text-center py-8">
-        <h2 className="text-2xl font-bold mb-4">Seu carrinho está vazio</h2>
-        <p className="text-muted-foreground mb-4">
-          Adicione produtos ao seu carrinho para continuar comprando
-        </p>
-        <Button asChild>
-          <a href="/products">Ver produtos</a>
-        </Button>
+      <div className="space-y-4">
+        <Link
+          href="/products"
+          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Voltar para produtos
+        </Link>
+        <div className="text-center py-8">
+          <h2 className="text-2xl font-bold mb-4">Seu carrinho está vazio</h2>
+          <p className="text-muted-foreground mb-4">
+            Adicione produtos ao seu carrinho para continuar comprando
+          </p>
+          <Button asChild>
+            <Link href="/products">Ver produtos</Link>
+          </Button>
+        </div>
       </div>
     );
   }
@@ -59,6 +76,14 @@ export function Cart() {
 
   return (
     <div className="space-y-4">
+      <Link
+        href="/products"
+        className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Voltar para produtos
+      </Link>
+
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Carrinho de Compras</h2>
         <Button
@@ -74,7 +99,10 @@ export function Cart() {
         {cart.map((item) => (
           <Card key={item.id} className="p-4">
             <div className="flex items-center gap-4">
-              <div className="relative w-20 h-20 bg-white rounded-md">
+              <Link
+                href={`/products/${item.product.id}`}
+                className="relative w-20 h-20 bg-white rounded-md"
+              >
                 <Image
                   src={item.product.imageUrl || "/placeholder.png"}
                   alt={item.product.name}
@@ -82,9 +110,14 @@ export function Cart() {
                   className="object-contain rounded-md"
                   unoptimized={!item.product.imageUrl}
                 />
-              </div>
+              </Link>
               <div className="flex-1">
-                <h3 className="font-semibold">{item.product.name}</h3>
+                <Link
+                  href={`/products/${item.product.id}`}
+                  className="font-semibold hover:underline"
+                >
+                  {item.product.name}
+                </Link>
                 <p className="text-muted-foreground">
                   {new Intl.NumberFormat("pt-BR", {
                     style: "currency",

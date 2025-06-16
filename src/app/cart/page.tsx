@@ -1,11 +1,11 @@
 "use client";
 
-import { CartItems } from "@/components/cart/cart-items";
+import { Cart } from "@/components/cart/cart";
 
 export default function CartPage() {
   return (
     <div className="container mx-auto py-8">
-      <CartItems />
+      <Cart />
     </div>
   );
 }

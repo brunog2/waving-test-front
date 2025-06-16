@@ -16,12 +16,16 @@ interface AddToCartDialogProps {
   product: Product;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
+  mode?: "add" | "buy";
 }
 
 export function AddToCartDialog({
   product,
   open,
   onOpenChange,
+  onSuccess,
+  mode = "add",
 }: AddToCartDialogProps) {
   const [quantity, setQuantity] = useState(1);
   const { addToCart } = useCart();
@@ -33,18 +37,25 @@ export function AddToCartDialog({
         onSuccess: () => {
           onOpenChange(false);
           setQuantity(1);
+          onSuccess?.();
         },
       }
     );
   };
 
+  const isBuyMode = mode === "buy";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Adicionar ao Carrinho</DialogTitle>
+          <DialogTitle>
+            {isBuyMode ? "Comprar Produto" : "Adicionar ao Carrinho"}
+          </DialogTitle>
           <DialogDescription>
-            Selecione a quantidade que deseja adicionar ao carrinho
+            {isBuyMode
+              ? "Selecione a quantidade que deseja comprar"
+              : "Selecione a quantidade que deseja adicionar ao carrinho"}
           </DialogDescription>
         </DialogHeader>
 
@@ -92,7 +103,13 @@ export function AddToCartDialog({
             Cancelar
           </Button>
           <Button onClick={handleAddToCart} disabled={addToCart.isPending}>
-            {addToCart.isPending ? "Adicionando..." : "Adicionar"}
+            {addToCart.isPending
+              ? isBuyMode
+                ? "Comprando..."
+                : "Adicionando..."
+              : isBuyMode
+              ? "Comprar"
+              : "Adicionar"}
           </Button>
         </DialogFooter>
       </DialogContent>

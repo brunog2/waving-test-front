@@ -13,7 +13,7 @@ export function useCart() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  const { data: cart, isLoading } = useQuery<CartItemWithPrice[]>({
+  const { data: cart, isLoading } = useQuery<CartItem[]>({
     queryKey: ["cart"],
     queryFn: async () => {
       if (user) {
@@ -119,7 +119,10 @@ export function useCart() {
   }, [user, cart]);
 
   const total =
-    cart?.reduce((sum, item) => sum + item.price * item.quantity, 0) ?? 0;
+    cart?.reduce(
+      (sum, item) => sum + Number(item.product.price) * item.quantity,
+      0
+    ) ?? 0;
 
   return {
     cart,

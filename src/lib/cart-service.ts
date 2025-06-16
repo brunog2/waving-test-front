@@ -25,9 +25,9 @@ export const cartService = {
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
   },
 
-  updateLocalCartItem(productId: string, quantity: number): void {
+  updateLocalCartItem(itemId: string, quantity: number): void {
     const cart = this.getLocalCart();
-    const itemIndex = cart.findIndex((item) => item.productId === productId);
+    const itemIndex = cart.findIndex((item) => item.id === itemId);
 
     if (itemIndex >= 0) {
       cart[itemIndex].quantity = quantity;
@@ -35,9 +35,9 @@ export const cartService = {
     }
   },
 
-  removeFromLocalCart(productId: string): void {
+  removeFromLocalCart(itemId: string): void {
     const cart = this.getLocalCart();
-    const updatedCart = cart.filter((item) => item.productId !== productId);
+    const updatedCart = cart.filter((item) => item.id !== itemId);
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(updatedCart));
   },
 
