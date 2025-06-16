@@ -119,4 +119,22 @@
   body {
     @apply bg-background text-foreground;
   }
+  button {
+    @apply cursor-pointer;
+  }
+}
+
+/* Hide scrollbar for product lists */
+.product-list-scroll {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.product-list-scroll::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
+/* Hover effect for titles */
+h2 {
+  @apply transition-colors hover:text-primary;
 }

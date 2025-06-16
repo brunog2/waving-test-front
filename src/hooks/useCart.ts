@@ -1,16 +1,23 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CartItem } from "@/interfaces/cart";
-import api from "@/lib/axios";
+import { CartItem } from "@/types";
+import api from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
+
+interface CartItemWithPrice extends CartItem {
+  price: number;
+}
 
 export function useCart() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
-  const { data: cart, isLoading } = useQuery<CartItem[]>({
+  const { data: cart, isLoading } = useQuery<CartItemWithPrice[]>({
     queryKey: ["cart"],
     queryFn: async () => {
       const { data } = await api.get("/cart");
       return data;
     },
+    enabled: !!user,
   });
 
   const addToCart = useMutation({

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Order } from "@/interfaces/order";
-import api from "@/lib/axios";
+import api from "@/lib/api";
 
 interface OrdersParams {
   page?: number;

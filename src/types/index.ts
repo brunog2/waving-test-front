@@ -3,6 +3,8 @@ export interface User {
   name: string;
   email: string;
   role: "ADMIN" | "USER";
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Product {
@@ -10,10 +12,10 @@ export interface Product {
   name: string;
   description: string;
   price: number;
-  image: string;
+  imageUrl?: string;
   categoryId: string;
-  stock: number;
   available: boolean;
+  stock: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -21,20 +23,18 @@ export interface Product {
 export interface Category {
   id: string;
   name: string;
-  description: string;
+  description?: string;
+  imageUrl?: string;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface CartItem {
   id: string;
-  productId: string;
   userId: string;
+  productId: string;
   quantity: number;
-  price: number;
   product: Product;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface Order {
@@ -42,22 +42,27 @@ export interface Order {
   userId: string;
   status: "PENDING" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED";
   total: number;
-  items: {
-    productId: string;
-    quantity: number;
-    price: number;
-  }[];
   createdAt: string;
   updatedAt: string;
+  items: OrderItem[];
+}
+
+export interface OrderItem {
+  id: string;
+  orderId: string;
+  productId: string;
+  quantity: number;
+  price: number;
+  product: Product;
 }
 
 export interface Comment {
   id: string;
-  productId: string;
   userId: string;
-  rating: number;
+  productId: string;
   content: string;
-  user: User;
+  rating: number;
   createdAt: string;
   updatedAt: string;
+  user: User;
 }

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Comment } from "@/interfaces/comment";
-import api from "@/lib/axios";
+import api from "@/lib/api";
 
 export function useComments(productId: string) {
   const queryClient = useQueryClient();

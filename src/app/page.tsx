@@ -1,103 +1,193 @@
+"use client";
+
+import { useCategories } from "@/hooks/useCategories";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { useCart } from "@/hooks/useCart";
+import { Category, Product } from "@/types";
+import { useEffect, useRef } from "react";
+import Link from "next/link";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+
+interface CategoryWithProducts extends Category {
+  products: Product[];
+}
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const {
+    categories,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useCategories(true);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const scrollRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const handleScroll = (categoryId: string, direction: "left" | "right") => {
+    const container = scrollRefs.current[categoryId];
+    if (!container) return;
+
+    const scrollAmount = container.clientWidth;
+    const targetScroll =
+      direction === "left"
+        ? container.scrollLeft - scrollAmount
+        : container.scrollLeft + scrollAmount;
+
+    container.scrollTo({
+      left: targetScroll,
+      behavior: "smooth",
+    });
+  };
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+
+    observerRef.current = observer;
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+  if (isLoading || !categories) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+
+  return (
+    <main className="container mx-auto px-4 py-8">
+      <div className="space-y-8">
+        {categories.map((category: CategoryWithProducts) => (
+          <section key={category.id} className="space-y-4">
+            <h2 className="text-2xl font-bold">{category.name}</h2>
+            <div className="relative group">
+              <div
+                ref={(el) => {
+                  scrollRefs.current[category.id] = el;
+                }}
+                className="flex overflow-x-auto gap-4 pb-4 product-list-scroll snap-x snap-mandatory"
+              >
+                {category.products.map((product) => (
+                  <div key={product.id} className="snap-start">
+                    <ProductCard product={product} />
+                  </div>
+                ))}
+                {category.products.length >= 4 && (
+                  <div className="snap-start">
+                    <ViewAllProductsCard categoryId={category.id} />
+                  </div>
+                )}
+              </div>
+
+              {/* Navigation Buttons */}
+              <button
+                onClick={() => handleScroll(category.id, "left")}
+                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 bg-background border rounded-full p-2 shadow-md hover:bg-accent transition-colors opacity-0 group-hover:opacity-100"
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </button>
+
+              <button
+                onClick={() => handleScroll(category.id, "right")}
+                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 bg-background border rounded-full p-2 shadow-md hover:bg-accent transition-colors opacity-0 group-hover:opacity-100"
+              >
+                <ChevronRight className="h-6 w-6" />
+              </button>
+            </div>
+          </section>
+        ))}
+        <div ref={loadMoreRef} className="h-10">
+          {isFetchingNextPage && (
+            <div className="flex justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            </div>
+          )}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+      </div>
+    </main>
+  );
+}
+
+function ProductCard({ product }: { product: Product }) {
+  const { addToCart } = useCart();
+
+  return (
+    <Card className="w-[280px] flex-shrink-0">
+      <CardHeader className="p-4">
+        <div className="relative w-full h-48 bg-white rounded-md">
           <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+            src={product.imageUrl || "/placeholder.png"}
+            alt={product.name}
+            fill
+            className="object-contain rounded-md"
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+        </div>
+      </CardHeader>
+      <CardContent className="p-4">
+        <CardTitle className="text-lg font-semibold line-clamp-2">
+          {product.name}
+        </CardTitle>
+        <p className="text-sm text-gray-500 mt-2 line-clamp-2">
+          {product.description}
+        </p>
+        <p className="text-lg font-bold mt-2">
+          {new Intl.NumberFormat("pt-BR", {
+            style: "currency",
+            currency: "BRL",
+          }).format(product.price)}
+        </p>
+      </CardContent>
+      <CardFooter className="p-4 pt-0">
+        <Button
+          className="w-full"
+          onClick={() =>
+            addToCart.mutate({ productId: product.id, quantity: 1 })
+          }
         >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          Adicionar ao Carrinho
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+}
+
+function ViewAllProductsCard({ categoryId }: { categoryId: string }) {
+  return (
+    <div className="w-[280px] flex-shrink-0 h-full">
+      <Link
+        href={`/products?categoryId=${categoryId}`}
+        className="w-full h-full flex items-center justify-center border-2 border-dashed rounded-lg hover:border-primary/50 transition-colors"
+      >
+        <div className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors">
+          <span>Ver todos os produtos</span>
+          <ChevronRight className="h-4 w-4" />
+        </div>
+      </Link>
     </div>
   );
 }

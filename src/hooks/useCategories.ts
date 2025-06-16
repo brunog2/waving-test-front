@@ -1,22 +1,59 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Category } from "@/interfaces/category";
-import api from "@/lib/axios";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import api from "@/lib/api";
+import { Category, Product } from "@/types";
 
-export function useCategories() {
+interface CategoryWithProducts extends Category {
+  products: Product[];
+}
+
+interface PaginatedResponse<T> {
+  data: T[];
+  metadata: {
+    total: number;
+    page: number;
+    limit: number;
+    hasNextPage: boolean;
+  };
+}
+
+export function useCategories(withProducts = false) {
   const queryClient = useQueryClient();
 
-  const { data: categories, isLoading } = useQuery<Category[]>({
-    queryKey: ["categories"],
-    queryFn: async () => {
-      const { data } = await api.get("/categories");
-      return data;
-    },
-  });
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useInfiniteQuery({
+      queryKey: ["categories", withProducts],
+      queryFn: async ({ pageParam = 1 }) => {
+        const response = await api.get<PaginatedResponse<CategoryWithProducts>>(
+          "/categories/with-products",
+          {
+            params: {
+              page: pageParam,
+              limit: 5,
+            },
+          }
+        );
+        return response.data;
+      },
+      initialPageParam: 1,
+      getNextPageParam: (lastPage) => {
+        if (lastPage?.metadata?.hasNextPage) {
+          return lastPage.metadata.page + 1;
+        }
+        return undefined;
+      },
+    });
+
+  const categories = data?.pages.flatMap((page) => page.data) || [];
 
   const createCategory = useMutation({
-    mutationFn: async (category: Omit<Category, "id">) => {
-      const { data } = await api.post("/categories", category);
-      return data;
+    mutationFn: async (data: { name: string; description: string }) => {
+      const response = await api.post<Category>("/categories", data);
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
@@ -24,9 +61,15 @@ export function useCategories() {
   });
 
   const updateCategory = useMutation({
-    mutationFn: async ({ id, ...category }: Category) => {
-      const { data } = await api.patch(`/categories/${id}`, category);
-      return data;
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: { name: string; description: string };
+    }) => {
+      const response = await api.put<Category>(`/categories/${id}`, data);
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
@@ -43,8 +86,11 @@ export function useCategories() {
   });
 
   return {
-    categories: categories ?? [],
+    categories,
     isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
     createCategory,
     updateCategory,
     deleteCategory,
