@@ -219,134 +219,142 @@ export default function ProductsPage() {
     <main className="container mx-auto px-4 py-8">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
         {/* Filtros */}
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Filtros</h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearFilters}
-              className="flex items-center gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
-            >
-              <Trash2 className="h-4 w-4" />
-              Limpar filtros
-            </Button>
-          </div>
-
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="category">Categoria</Label>
-              <Select
-                value={filters.categoryId}
-                onValueChange={(value: string) => {
-                  setFilters((prev) => ({ ...prev, categoryId: value }));
-                }}
+        <div className="md:sticky md:top-[88px] md:self-start md:h-[calc(100vh-88px)] md:flex md:flex-col">
+          <div className="space-y-6 md:flex-1 md:overflow-y-auto md:pr-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Filtros</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearFilters}
+                className="flex items-center gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
               >
-                <SelectTrigger id="category" className="w-full">
-                  <SelectValue placeholder="Todas as categorias" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas as categorias</SelectItem>
-                  {categories?.map((category: Category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <Trash2 className="h-4 w-4" />
+                Limpar filtros
+              </Button>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="minPrice">Preço mínimo</Label>
-              <Input
-                id="minPrice"
-                type="number"
-                value={filters.minPrice}
-                onChange={(e) => {
-                  setFilters((prev) => ({ ...prev, minPrice: e.target.value }));
-                }}
-                placeholder="R$ 0,00"
-                className="w-full"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="maxPrice">Preço máximo</Label>
-              <Input
-                id="maxPrice"
-                type="number"
-                value={filters.maxPrice}
-                onChange={(e) => {
-                  setFilters((prev) => ({ ...prev, maxPrice: e.target.value }));
-                }}
-                placeholder="R$ 0,00"
-                className="w-full"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="available">Disponibilidade</Label>
-              <Select
-                value={filters.available}
-                onValueChange={(value: string) => {
-                  setFilters((prev) => ({ ...prev, available: value }));
-                }}
-              >
-                <SelectTrigger id="available" className="w-full">
-                  <SelectValue placeholder="Todos" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="true">Disponíveis</SelectItem>
-                  <SelectItem value="false">Indisponíveis</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="sortBy">Ordenar por</Label>
-              <Select
-                value={filters.sortBy}
-                onValueChange={(value: FilterSortBy | "relevance") => {
-                  setFilters((prev) => ({ ...prev, sortBy: value }));
-                }}
-              >
-                <SelectTrigger id="sortBy" className="w-full">
-                  <SelectValue placeholder="Relevância" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="relevance">Relevância</SelectItem>
-                  <SelectItem value="price">Preço</SelectItem>
-                  <SelectItem value="name">Nome</SelectItem>
-                  <SelectItem value="createdAt">Data de criação</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {filters.sortBy !== "relevance" && (
+            <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="sortOrder">Ordem</Label>
+                <Label htmlFor="category">Categoria</Label>
                 <Select
-                  value={filters.sortOrder}
-                  onValueChange={(value: SortOrder) => {
-                    setFilters((prev) => ({ ...prev, sortOrder: value }));
+                  value={filters.categoryId}
+                  onValueChange={(value: string) => {
+                    setFilters((prev) => ({ ...prev, categoryId: value }));
                   }}
                 >
-                  <SelectTrigger id="sortOrder" className="w-full">
-                    <SelectValue placeholder="Crescente" />
+                  <SelectTrigger id="category" className="w-full">
+                    <SelectValue placeholder="Todas as categorias" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="asc">Crescente</SelectItem>
-                    <SelectItem value="desc">Decrescente</SelectItem>
+                    <SelectItem value="all">Todas as categorias</SelectItem>
+                    {categories?.map((category: Category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
-            )}
 
-            <div className="flex gap-2">
-              <Button onClick={applyFilters} className="flex-1">
-                Aplicar Filtros
-              </Button>
+              <div className="space-y-2">
+                <Label htmlFor="minPrice">Preço mínimo</Label>
+                <Input
+                  id="minPrice"
+                  type="number"
+                  value={filters.minPrice}
+                  onChange={(e) => {
+                    setFilters((prev) => ({
+                      ...prev,
+                      minPrice: e.target.value,
+                    }));
+                  }}
+                  placeholder="R$ 0,00"
+                  className="w-full"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="maxPrice">Preço máximo</Label>
+                <Input
+                  id="maxPrice"
+                  type="number"
+                  value={filters.maxPrice}
+                  onChange={(e) => {
+                    setFilters((prev) => ({
+                      ...prev,
+                      maxPrice: e.target.value,
+                    }));
+                  }}
+                  placeholder="R$ 0,00"
+                  className="w-full"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="available">Disponibilidade</Label>
+                <Select
+                  value={filters.available}
+                  onValueChange={(value: string) => {
+                    setFilters((prev) => ({ ...prev, available: value }));
+                  }}
+                >
+                  <SelectTrigger id="available" className="w-full">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="true">Disponíveis</SelectItem>
+                    <SelectItem value="false">Indisponíveis</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="sortBy">Ordenar por</Label>
+                <Select
+                  value={filters.sortBy}
+                  onValueChange={(value: FilterSortBy | "relevance") => {
+                    setFilters((prev) => ({ ...prev, sortBy: value }));
+                  }}
+                >
+                  <SelectTrigger id="sortBy" className="w-full">
+                    <SelectValue placeholder="Relevância" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="relevance">Relevância</SelectItem>
+                    <SelectItem value="price">Preço</SelectItem>
+                    <SelectItem value="name">Nome</SelectItem>
+                    <SelectItem value="createdAt">Data de criação</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {filters.sortBy !== "relevance" && (
+                <div className="space-y-2">
+                  <Label htmlFor="sortOrder">Ordem</Label>
+                  <Select
+                    value={filters.sortOrder}
+                    onValueChange={(value: SortOrder) => {
+                      setFilters((prev) => ({ ...prev, sortOrder: value }));
+                    }}
+                  >
+                    <SelectTrigger id="sortOrder" className="w-full">
+                      <SelectValue placeholder="Crescente" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="asc">Crescente</SelectItem>
+                      <SelectItem value="desc">Decrescente</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <Button onClick={applyFilters} className="flex-1">
+                  Aplicar Filtros
+                </Button>
+              </div>
             </div>
           </div>
         </div>

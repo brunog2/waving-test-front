@@ -11,20 +11,24 @@ export interface Product {
   id: string;
   name: string;
   description: string;
-  price: number;
-  imageUrl?: string;
-  categoryId: string;
+  price: string;
+  imageUrl: string | null;
   available: boolean;
-  stock: number;
+  categoryId: string;
   createdAt: string;
   updatedAt: string;
+  deletedAt: string | null;
+  category: Category;
+  averageRating: number;
+  totalRatings: number;
+  reviews: Review[];
 }
 
 export interface Category {
   id: string;
   name: string;
-  description?: string;
-  imageUrl?: string;
+  description: string;
+  imageUrl: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -65,4 +69,16 @@ export interface Comment {
   createdAt: string;
   updatedAt: string;
   user: User;
+}
+
+export interface Review {
+  id: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProductWithCategory extends Product {
+  category: Category;
 }

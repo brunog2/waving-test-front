@@ -1,26 +1,58 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Comment } from "@/interfaces/comment";
 import api from "@/lib/api";
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+interface Comment {
+  id: string;
+  productId: string;
+  userId: string;
+  rating: number;
+  content: string | null;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+  user: User;
+}
+
+interface CommentsResponse {
+  data: Comment[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
+}
 
 export function useComments(productId: string) {
   const queryClient = useQueryClient();
 
-  const { data: comments, isLoading } = useQuery<Comment[]>({
+  const { data: comments, isLoading } = useQuery<CommentsResponse>({
     queryKey: ["comments", productId],
     queryFn: async () => {
-      const { data } = await api.get(`/products/${productId}/comments`);
-      return data;
+      const response = await api.get(`/comments`, {
+        params: {
+          productId,
+        },
+      });
+      return response.data;
     },
-    enabled: !!productId,
   });
 
   const addComment = useMutation({
-    mutationFn: async (comment: Omit<Comment, "id" | "createdAt">) => {
-      const { data } = await api.post(
-        `/products/${productId}/comments`,
-        comment
-      );
-      return data;
+    mutationFn: async (data: { rating: number; content?: string }) => {
+      const response = await api.post(`/comments`, {
+        productId,
+        ...data,
+      });
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["comments", productId] });
@@ -50,7 +82,7 @@ export function useComments(productId: string) {
   });
 
   return {
-    comments: comments ?? [],
+    comments: comments?.data ?? [],
     isLoading,
     addComment,
     updateComment,

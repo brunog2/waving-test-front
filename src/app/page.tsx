@@ -15,6 +15,7 @@ import { Category, Product } from "@/types";
 import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ProductCard } from "@/components/products/product-card";
 
 interface CategoryWithProducts extends Category {
   products: Product[];
@@ -93,12 +94,15 @@ export default function Home() {
                 className="flex overflow-x-auto gap-4 pb-4 product-list-scroll snap-x snap-mandatory"
               >
                 {category.products.map((product) => (
-                  <div key={product.id} className="snap-start">
+                  <div
+                    key={product.id}
+                    className="snap-start w-[280px] flex-shrink-0"
+                  >
                     <ProductCard product={product} />
                   </div>
                 ))}
                 {category.products.length >= 4 && (
-                  <div className="snap-start">
+                  <div className="snap-start w-[280px] flex-shrink-0">
                     <ViewAllProductsCard categoryId={category.id} />
                   </div>
                 )}
@@ -133,52 +137,9 @@ export default function Home() {
   );
 }
 
-function ProductCard({ product }: { product: Product }) {
-  const { addToCart } = useCart();
-
-  return (
-    <Card className="w-[280px] flex-shrink-0">
-      <CardHeader className="p-4">
-        <div className="relative w-full h-48 bg-white rounded-md">
-          <Image
-            src={product.imageUrl || "/placeholder.png"}
-            alt={product.name}
-            fill
-            className="object-contain rounded-md"
-          />
-        </div>
-      </CardHeader>
-      <CardContent className="p-4">
-        <CardTitle className="text-lg font-semibold line-clamp-2">
-          {product.name}
-        </CardTitle>
-        <p className="text-sm text-gray-500 mt-2 line-clamp-2">
-          {product.description}
-        </p>
-        <p className="text-lg font-bold mt-2">
-          {new Intl.NumberFormat("pt-BR", {
-            style: "currency",
-            currency: "BRL",
-          }).format(product.price)}
-        </p>
-      </CardContent>
-      <CardFooter className="p-4 pt-0">
-        <Button
-          className="w-full"
-          onClick={() =>
-            addToCart.mutate({ productId: product.id, quantity: 1 })
-          }
-        >
-          Adicionar ao Carrinho
-        </Button>
-      </CardFooter>
-    </Card>
-  );
-}
-
 function ViewAllProductsCard({ categoryId }: { categoryId: string }) {
   return (
-    <div className="w-[280px] flex-shrink-0 h-full">
+    <div className="h-full">
       <Link
         href={`/products?categoryId=${categoryId}`}
         className="w-full h-full flex items-center justify-center border-2 border-dashed rounded-lg hover:border-primary/50 transition-colors"
