@@ -13,11 +13,13 @@ interface CategoryWithProducts extends Category {
 
 interface PaginatedResponse<T> {
   data: T[];
-  metadata: {
+  meta: {
     total: number;
     page: number;
     limit: number;
+    totalPages: number;
     hasNextPage: boolean;
+    hasPreviousPage: boolean;
   };
 }
 
@@ -41,8 +43,8 @@ export function useCategories(withProducts = false) {
       },
       initialPageParam: 1,
       getNextPageParam: (lastPage) => {
-        if (lastPage?.metadata?.hasNextPage) {
-          return lastPage.metadata.page + 1;
+        if (lastPage?.meta?.hasNextPage) {
+          return lastPage.meta.page + 1;
         }
         return undefined;
       },

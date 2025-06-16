@@ -61,6 +61,7 @@ function ImageZoom({ src, alt }: { src: string | undefined; alt: string }) {
               }
             : undefined
         }
+        unoptimized={!src}
       />
       {isZoomed && (
         <div className="absolute inset-0 bg-black/5 pointer-events-none" />
@@ -71,11 +72,12 @@ function ImageZoom({ src, alt }: { src: string | undefined; alt: string }) {
 
 export function ProductCard({ product, className }: ProductCardProps) {
   const { addToCart } = useCart();
+  const isAvailable = product.available !== false;
 
   return (
-    <Card className={`h-full flex flex-col ${className}`}>
-      {!product.available && (
-        <div className="absolute inset-0 bg-background/80 backdrop-blur-[2px] z-10 flex items-center justify-center">
+    <Card className={`h-full flex flex-col relative ${className}`}>
+      {!isAvailable && (
+        <div className="absolute inset-0 bg-background/80 backdrop-blur-[2px] z-10 flex items-center justify-center rounded-lg">
           <div className="flex flex-col items-center gap-2 text-destructive">
             <AlertCircle className="h-8 w-8" />
             <span className="font-medium">Indisponível</span>
@@ -84,7 +86,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
       )}
       <Link
         href={`/products/${product.id}`}
-        className={cn("flex-grow", !product.available && "pointer-events-none")}
+        className={cn("flex-grow", !isAvailable && "pointer-events-none")}
       >
         <CardHeader className="p-4">
           <div className="relative w-full aspect-square bg-white rounded-md">
@@ -93,6 +95,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
               alt={product.name}
               fill
               className="object-contain rounded-md"
+              unoptimized={!product.imageUrl}
             />
           </div>
         </CardHeader>
@@ -128,10 +131,10 @@ export function ProductCard({ product, className }: ProductCardProps) {
             e.preventDefault();
             addToCart.mutate({ productId: product.id, quantity: 1 });
           }}
-          disabled={!product.available}
-          variant={!product.available ? "secondary" : "default"}
+          disabled={!isAvailable}
+          variant={!isAvailable ? "secondary" : "default"}
         >
-          {product.available ? "Adicionar ao Carrinho" : "Indisponível"}
+          {isAvailable ? "Adicionar ao Carrinho" : "Indisponível"}
         </Button>
       </CardFooter>
     </Card>

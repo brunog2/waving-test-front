@@ -12,10 +12,11 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/useCart";
 import { Category, Product } from "@/types";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { ProductCard } from "@/components/products/product-card";
+import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 
 interface CategoryWithProducts extends Category {
   products: Product[];
@@ -29,9 +30,13 @@ export default function Home() {
     hasNextPage,
     isFetchingNextPage,
   } = useCategories(true);
-  const observerRef = useRef<IntersectionObserver | null>(null);
-  const loadMoreRef = useRef<HTMLDivElement>(null);
   const scrollRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+
+  const { loadMoreRef, isFetchingNextPage: isLoadingMore } = useInfiniteScroll({
+    onLoadMore: fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  });
 
   const handleScroll = (categoryId: string, direction: "left" | "right") => {
     const container = scrollRefs.current[categoryId];
@@ -48,29 +53,6 @@ export default function Home() {
       behavior: "smooth",
     });
   };
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
-          fetchNextPage();
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (loadMoreRef.current) {
-      observer.observe(loadMoreRef.current);
-    }
-
-    observerRef.current = observer;
-
-    return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
-    };
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   if (isLoading || !categories) {
     return (
@@ -126,7 +108,7 @@ export default function Home() {
           </section>
         ))}
         <div ref={loadMoreRef} className="h-10">
-          {isFetchingNextPage && (
+          {isLoadingMore && (
             <div className="flex justify-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
             </div>

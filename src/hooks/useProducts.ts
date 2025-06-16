@@ -4,36 +4,28 @@ import {
   useQueryClient,
   useInfiniteQuery,
 } from "@tanstack/react-query";
-import { Product } from "@/interfaces/product";
+import { Product } from "@/types";
 import api from "@/lib/api";
 
-interface ProductQuery {
-  category?: string;
-  search?: string;
-  sort?: string;
-  page?: number;
-  limit?: number;
-}
-
-export interface ProductsQueryParams {
+interface ProductsQueryParams {
   search?: string;
   categoryId?: string;
   minPrice?: number;
   maxPrice?: number;
-  available?: boolean;
-  sortBy?: "price" | "name" | "createdAt";
+  sortBy?: "price" | "name";
   sortOrder?: "asc" | "desc";
-  page?: number;
   limit?: number;
 }
 
 interface PaginatedResponse<T> {
   data: T[];
-  metadata: {
+  meta: {
     total: number;
     page: number;
     limit: number;
+    totalPages: number;
     hasNextPage: boolean;
+    hasPreviousPage: boolean;
   };
 }
 
@@ -59,8 +51,6 @@ export function useProducts(params: ProductsQueryParams = {}) {
           searchParams.set("minPrice", params.minPrice.toString());
         if (params.maxPrice)
           searchParams.set("maxPrice", params.maxPrice.toString());
-        if (params.available !== undefined)
-          searchParams.set("available", String(params.available));
         if (params.sortBy) searchParams.set("sortBy", params.sortBy);
         if (params.sortOrder) searchParams.set("sortOrder", params.sortOrder);
         searchParams.set("page", pageParam.toString());
@@ -73,8 +63,8 @@ export function useProducts(params: ProductsQueryParams = {}) {
       },
       initialPageParam: 1,
       getNextPageParam: (lastPage) => {
-        if (!lastPage?.metadata?.hasNextPage) return undefined;
-        return lastPage.metadata.page + 1;
+        if (!lastPage?.meta?.hasNextPage) return undefined;
+        return lastPage.meta.page + 1;
       },
     });
 

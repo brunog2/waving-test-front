@@ -1,54 +1,21 @@
 "use client";
 
-import { useProducts } from "@/hooks/useProducts";
 import { ProductCard } from "@/components/products/product-card";
-import { useEffect, useRef, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useCategories } from "@/hooks/useCategories";
-import { Category, Product } from "@/types";
-import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
-
-type SortBy = "price" | "name" | "createdAt";
-type SortOrder = "asc" | "desc";
-type FilterSortBy = SortBy | "relevance";
-
-interface FilterState {
-  search: string;
-  categoryId: string;
-  minPrice: string;
-  maxPrice: string;
-  available: string;
-  sortBy: FilterSortBy;
-  sortOrder: SortOrder;
-}
-
-interface QueryState {
-  search: string;
-  categoryId?: string;
-  minPrice?: number;
-  maxPrice?: number;
-  available?: boolean;
-  sortBy?: SortBy;
-  sortOrder?: SortOrder;
-}
+import { ProductFilters } from "@/components/products/product-filters";
+import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
+import { useProducts } from "@/hooks/useProducts";
+import { Product } from "@/types";
+import { useSearchParams } from "next/navigation";
 
 interface PaginatedResponse<T> {
   data: T[];
-  metadata: {
+  meta: {
     total: number;
     page: number;
     limit: number;
+    totalPages: number;
     hasNextPage: boolean;
+    hasPreviousPage: boolean;
   };
 }
 
@@ -58,152 +25,40 @@ interface InfiniteQueryResponse<T> {
 }
 
 export default function ProductsPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const observerRef = useRef<IntersectionObserver | null>(null);
-  const loadMoreRef = useRef<HTMLDivElement>(null);
 
-  // Estado para os filtros do formulário
-  const [filters, setFilters] = useState<FilterState>({
-    search: searchParams.get("search") || "",
-    categoryId: searchParams.get("categoryId") || "all",
-    minPrice: searchParams.get("minPrice") || "",
-    maxPrice: searchParams.get("maxPrice") || "",
-    available: searchParams.get("available") || "all",
-    sortBy: (searchParams.get("sortBy") as FilterSortBy) || "relevance",
-    sortOrder: (searchParams.get("sortOrder") as SortOrder) || "asc",
-  });
+  const sortByParam = searchParams.get("sortBy");
+  const sortOrderParam = searchParams.get("sortOrder");
+  const categoryIdParam = searchParams.get("categoryId");
 
-  // Estado para os parâmetros da query
-  const [queryParams, setQueryParams] = useState<QueryState>({
-    search: searchParams.get("search") || "",
-    categoryId: searchParams.get("categoryId") || undefined,
-    minPrice: searchParams.get("minPrice")
-      ? Number(searchParams.get("minPrice"))
-      : undefined,
-    maxPrice: searchParams.get("maxPrice")
-      ? Number(searchParams.get("maxPrice"))
-      : undefined,
-    available: searchParams.get("available") === "true" ? true : undefined,
-    sortBy:
-      searchParams.get("sortBy") && searchParams.get("sortBy") !== "relevance"
-        ? (searchParams.get("sortBy") as SortBy)
-        : undefined,
-    sortOrder: (searchParams.get("sortOrder") as SortOrder) || undefined,
-  });
-
-  // Atualiza os filtros quando os query params mudam
-  useEffect(() => {
-    setFilters({
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useProducts({
       search: searchParams.get("search") || "",
-      categoryId: searchParams.get("categoryId") || "all",
-      minPrice: searchParams.get("minPrice") || "",
-      maxPrice: searchParams.get("maxPrice") || "",
-      available: searchParams.get("available") || "all",
-      sortBy: (searchParams.get("sortBy") as FilterSortBy) || "relevance",
-      sortOrder: (searchParams.get("sortOrder") as SortOrder) || "asc",
-    });
-
-    setQueryParams({
-      search: searchParams.get("search") || "",
-      categoryId: searchParams.get("categoryId") || undefined,
+      categoryId:
+        categoryIdParam && categoryIdParam !== "all"
+          ? categoryIdParam
+          : undefined,
       minPrice: searchParams.get("minPrice")
         ? Number(searchParams.get("minPrice"))
         : undefined,
       maxPrice: searchParams.get("maxPrice")
         ? Number(searchParams.get("maxPrice"))
         : undefined,
-      available: searchParams.get("available") === "true" ? true : undefined,
       sortBy:
-        searchParams.get("sortBy") && searchParams.get("sortBy") !== "relevance"
-          ? (searchParams.get("sortBy") as SortBy)
+        sortByParam && sortByParam !== "relevance"
+          ? (sortByParam as "price" | "name")
           : undefined,
-      sortOrder: (searchParams.get("sortOrder") as SortOrder) || undefined,
-    });
-  }, [searchParams]);
-
-  const { categories } = useCategories(false);
-
-  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useProducts({
-      search: filters.search,
-      categoryId: filters.categoryId !== "all" ? filters.categoryId : undefined,
-      minPrice: filters.minPrice ? Number(filters.minPrice) : undefined,
-      maxPrice: filters.maxPrice ? Number(filters.maxPrice) : undefined,
-      available:
-        filters.available === "true"
-          ? true
-          : filters.available === "false"
-          ? false
-          : undefined,
-      sortBy: filters.sortBy !== "relevance" ? filters.sortBy : undefined,
-      sortOrder: filters.sortOrder,
+      sortOrder: (sortOrderParam as "asc" | "desc") || undefined,
     }) as { data: InfiniteQueryResponse<Product> | undefined } & Omit<
       ReturnType<typeof useProducts>,
       "data"
     >;
 
-  const applyFilters = () => {
-    const params = new URLSearchParams();
-
-    if (filters.search) params.set("search", filters.search);
-    if (filters.categoryId !== "all")
-      params.set("categoryId", filters.categoryId);
-    if (filters.minPrice) params.set("minPrice", filters.minPrice);
-    if (filters.maxPrice) params.set("maxPrice", filters.maxPrice);
-    if (filters.available !== "all") params.set("available", filters.available);
-    if (filters.sortBy !== "relevance") params.set("sortBy", filters.sortBy);
-    if (filters.sortOrder) params.set("sortOrder", filters.sortOrder);
-
-    router.push(`/products?${params.toString()}`);
-  };
-
-  const clearFilters = () => {
-    const defaultFilters = {
-      search: "",
-      categoryId: "all",
-      minPrice: "",
-      maxPrice: "",
-      available: "all",
-      sortBy: "relevance" as FilterSortBy,
-      sortOrder: "asc" as SortOrder,
-    };
-
-    setFilters(defaultFilters);
-    setQueryParams({
-      search: "",
-      categoryId: undefined,
-      minPrice: undefined,
-      maxPrice: undefined,
-      available: undefined,
-      sortBy: undefined,
-      sortOrder: undefined,
-    });
-    router.push("/products");
-  };
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
-          fetchNextPage();
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (loadMoreRef.current) {
-      observer.observe(loadMoreRef.current);
-    }
-
-    observerRef.current = observer;
-
-    return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
-    };
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+  const { loadMoreRef, isFetchingNextPage: isLoadingMore } = useInfiniteScroll({
+    onLoadMore: fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  });
 
   if (isLoading || !data?.pages) {
     return (
@@ -213,7 +68,19 @@ export default function ProductsPage() {
     );
   }
 
-  const products = data.pages.flatMap((page) => page.data);
+  // Usar um Map para garantir produtos únicos, mantendo a ordem
+  const uniqueProducts = new Map<string, Product>();
+  data.pages.forEach((page) => {
+    page.data.forEach((product) => {
+      if (!uniqueProducts.has(product.id)) {
+        uniqueProducts.set(product.id, product);
+      }
+    });
+  });
+  const products = Array.from(uniqueProducts.values());
+
+  const lastPage = data.pages[data.pages.length - 1];
+  const hasMorePages = lastPage?.meta.hasNextPage;
 
   return (
     <main className="container mx-auto px-4 py-8">
@@ -221,141 +88,7 @@ export default function ProductsPage() {
         {/* Filtros */}
         <div className="md:sticky md:top-[88px] md:self-start md:h-[calc(100vh-88px)] md:flex md:flex-col">
           <div className="space-y-6 md:flex-1 md:overflow-y-auto md:pr-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Filtros</h2>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearFilters}
-                className="flex items-center gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
-              >
-                <Trash2 className="h-4 w-4" />
-                Limpar filtros
-              </Button>
-            </div>
-
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="category">Categoria</Label>
-                <Select
-                  value={filters.categoryId}
-                  onValueChange={(value: string) => {
-                    setFilters((prev) => ({ ...prev, categoryId: value }));
-                  }}
-                >
-                  <SelectTrigger id="category" className="w-full">
-                    <SelectValue placeholder="Todas as categorias" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas as categorias</SelectItem>
-                    {categories?.map((category: Category) => (
-                      <SelectItem key={category.id} value={category.id}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="minPrice">Preço mínimo</Label>
-                <Input
-                  id="minPrice"
-                  type="number"
-                  value={filters.minPrice}
-                  onChange={(e) => {
-                    setFilters((prev) => ({
-                      ...prev,
-                      minPrice: e.target.value,
-                    }));
-                  }}
-                  placeholder="R$ 0,00"
-                  className="w-full"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="maxPrice">Preço máximo</Label>
-                <Input
-                  id="maxPrice"
-                  type="number"
-                  value={filters.maxPrice}
-                  onChange={(e) => {
-                    setFilters((prev) => ({
-                      ...prev,
-                      maxPrice: e.target.value,
-                    }));
-                  }}
-                  placeholder="R$ 0,00"
-                  className="w-full"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="available">Disponibilidade</Label>
-                <Select
-                  value={filters.available}
-                  onValueChange={(value: string) => {
-                    setFilters((prev) => ({ ...prev, available: value }));
-                  }}
-                >
-                  <SelectTrigger id="available" className="w-full">
-                    <SelectValue placeholder="Todos" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    <SelectItem value="true">Disponíveis</SelectItem>
-                    <SelectItem value="false">Indisponíveis</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="sortBy">Ordenar por</Label>
-                <Select
-                  value={filters.sortBy}
-                  onValueChange={(value: FilterSortBy | "relevance") => {
-                    setFilters((prev) => ({ ...prev, sortBy: value }));
-                  }}
-                >
-                  <SelectTrigger id="sortBy" className="w-full">
-                    <SelectValue placeholder="Relevância" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="relevance">Relevância</SelectItem>
-                    <SelectItem value="price">Preço</SelectItem>
-                    <SelectItem value="name">Nome</SelectItem>
-                    <SelectItem value="createdAt">Data de criação</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {filters.sortBy !== "relevance" && (
-                <div className="space-y-2">
-                  <Label htmlFor="sortOrder">Ordem</Label>
-                  <Select
-                    value={filters.sortOrder}
-                    onValueChange={(value: SortOrder) => {
-                      setFilters((prev) => ({ ...prev, sortOrder: value }));
-                    }}
-                  >
-                    <SelectTrigger id="sortOrder" className="w-full">
-                      <SelectValue placeholder="Crescente" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="asc">Crescente</SelectItem>
-                      <SelectItem value="desc">Decrescente</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
-              <div className="flex gap-2">
-                <Button onClick={applyFilters} className="flex-1">
-                  Aplicar Filtros
-                </Button>
-              </div>
-            </div>
+            <ProductFilters />
           </div>
         </div>
 
@@ -369,13 +102,15 @@ export default function ProductsPage() {
             ))}
           </div>
 
-          <div ref={loadMoreRef} className="h-10 mt-8">
-            {isFetchingNextPage && (
-              <div className="flex justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-              </div>
-            )}
-          </div>
+          {hasMorePages && (
+            <div ref={loadMoreRef} className="h-10 mt-8">
+              {isLoadingMore && (
+                <div className="flex justify-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </main>

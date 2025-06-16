@@ -6,13 +6,19 @@ import { ModeToggle } from "@/components/theme/mode-toggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect } from "react";
 
 export function Header() {
   const { user, signOut } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    const search = searchParams.get("search");
+    setSearchTerm(search || "");
+  }, [searchParams]);
 
   const handleSearch = () => {
     if (searchTerm.trim()) {
@@ -58,7 +64,7 @@ export function Header() {
               className="pr-10"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyPress={handleKeyPress}
+              onKeyUp={handleKeyPress}
             />
             <Button
               size="icon"

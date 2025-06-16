@@ -27,10 +27,11 @@ export interface Product {
 export interface Category {
   id: string;
   name: string;
-  description: string;
-  imageUrl: string;
+  description: string | null;
+  imageUrl: string | null;
   createdAt: string;
   updatedAt: string;
+  deletedAt: string | null;
 }
 
 export interface CartItem {
@@ -74,9 +75,20 @@ export interface Comment {
 export interface Review {
   id: string;
   rating: number;
-  comment: string;
+  content: string | null;
+  userId: string;
+  productId: string;
   createdAt: string;
   updatedAt: string;
+  deletedAt: string | null;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    createdAt: string;
+    updatedAt: string;
+    deletedAt: string | null;
+  };
 }
 
 export interface ProductWithCategory extends Product {
