@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
+import { CartButton } from "@/components/cart/cart-button";
 
 export function Header() {
   const { user, signOut } = useAuth();
@@ -77,6 +78,7 @@ export function Header() {
           </div>
 
           <div className="flex items-center gap-4">
+            <CartButton />
             <ModeToggle />
             {user ? (
               <>

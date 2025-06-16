@@ -94,22 +94,35 @@ export default function ProductsPage() {
 
         {/* Lista de produtos */}
         <div className="md:col-span-3">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.map((product: Product) => (
-              <div key={product.id} className="w-full">
-                <ProductCard product={product} />
+          {products.length === 0 ? (
+            <div className="text-center py-12">
+              <h3 className="text-lg font-semibold mb-2">
+                Nenhum produto encontrado
+              </h3>
+              <p className="text-muted-foreground">
+                Tente ajustar os filtros ou buscar por outro termo
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {products.map((product: Product) => (
+                  <div key={product.id} className="w-full">
+                    <ProductCard product={product} />
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
 
-          {hasMorePages && (
-            <div ref={loadMoreRef} className="h-10 mt-8">
-              {isLoadingMore && (
-                <div className="flex justify-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+              {hasMorePages && (
+                <div ref={loadMoreRef} className="h-10 mt-8">
+                  {isLoadingMore && (
+                    <div className="flex justify-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
+            </>
           )}
         </div>
       </div>

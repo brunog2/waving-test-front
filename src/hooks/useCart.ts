@@ -2,6 +2,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CartItem } from "@/types";
 import api from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
+import { cartService } from "@/lib/cart-service";
+import { useEffect } from "react";
 
 interface CartItemWithPrice extends CartItem {
   price: number;
@@ -14,10 +16,13 @@ export function useCart() {
   const { data: cart, isLoading } = useQuery<CartItemWithPrice[]>({
     queryKey: ["cart"],
     queryFn: async () => {
-      const { data } = await api.get("/cart");
-      return data;
+      if (user) {
+        const { data } = await api.get("/cart");
+        return data;
+      } else {
+        return cartService.getLocalCart();
+      }
     },
-    enabled: !!user,
   });
 
   const addToCart = useMutation({
@@ -28,8 +33,22 @@ export function useCart() {
       productId: string;
       quantity: number;
     }) => {
-      const { data } = await api.post("/cart", { productId, quantity });
-      return data;
+      if (user) {
+        const { data } = await api.post("/cart", { productId, quantity });
+        return data;
+      } else {
+        // For local storage, we need to get the product details first
+        const { data: product } = await api.get(`/products/${productId}`);
+        const cartItem: CartItem = {
+          id: Date.now().toString(),
+          productId,
+          userId: "local",
+          quantity,
+          product,
+        };
+        cartService.addToLocalCart(cartItem);
+        return cartItem;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cart"] });
@@ -44,8 +63,13 @@ export function useCart() {
       itemId: string;
       quantity: number;
     }) => {
-      const { data } = await api.patch(`/cart/${itemId}`, { quantity });
-      return data;
+      if (user) {
+        const { data } = await api.patch(`/cart/${itemId}`, { quantity });
+        return data;
+      } else {
+        cartService.updateLocalCartItem(itemId, quantity);
+        return null;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cart"] });
@@ -54,7 +78,11 @@ export function useCart() {
 
   const removeFromCart = useMutation({
     mutationFn: async (itemId: string) => {
-      await api.delete(`/cart/${itemId}`);
+      if (user) {
+        await api.delete(`/cart/${itemId}`);
+      } else {
+        cartService.removeFromLocalCart(itemId);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cart"] });
@@ -63,12 +91,32 @@ export function useCart() {
 
   const clearCart = useMutation({
     mutationFn: async () => {
-      await api.delete("/cart");
+      if (user) {
+        await api.delete("/cart");
+      } else {
+        cartService.clearLocalCart();
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cart"] });
     },
   });
+
+  // Sync local cart with API cart when user logs in
+  useEffect(() => {
+    if (user && cart) {
+      const mergedCart = cartService.syncLocalCartWithApi(cart);
+      if (mergedCart.length > 0) {
+        // Add all items from merged cart to API
+        mergedCart.forEach((item: CartItem) => {
+          addToCart.mutate({
+            productId: item.productId,
+            quantity: item.quantity,
+          });
+        });
+      }
+    }
+  }, [user, cart]);
 
   const total =
     cart?.reduce((sum, item) => sum + item.price * item.quantity, 0) ?? 0;
