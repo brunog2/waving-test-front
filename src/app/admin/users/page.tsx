@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -8,26 +10,22 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAdminUsers } from "@/hooks/useAdminUsers";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAdminUsers } from "@/hooks/useAdminUsers";
 import {
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  Users,
-  User,
-  Mail,
-  Calendar,
-  Shield,
-  Edit,
-  Trash2,
   AlertTriangle,
+  Calendar,
+  Edit,
+  Mail,
+  Search,
+  Shield,
+  Trash2,
+  User,
+  Users,
 } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useState } from "react";
 
 export default function AdminUsersPage() {
   const [page, setPage] = useState(1);

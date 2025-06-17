@@ -12,6 +12,7 @@ import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import { useProducts } from "@/hooks/useProducts";
 import { Product } from "@/types";
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
 interface PaginatedResponse<T> {
   data: T[];
@@ -30,7 +31,7 @@ interface InfiniteQueryResponse<T> {
   pageParams: number[];
 }
 
-export default function ProductsPage() {
+function ProductsPageContent() {
   const searchParams = useSearchParams();
 
   const sortByParam = searchParams.get("sortBy");
@@ -151,5 +152,37 @@ export default function ProductsPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="container mx-auto px-4 py-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            {/* Filtros - Skeleton */}
+            <div className="md:sticky md:top-[88px] md:self-start md:h-[calc(100vh-88px)] md:flex md:flex-col">
+              <div className="space-y-6 md:flex-1 md:overflow-y-auto md:pr-4">
+                <ProductFiltersSkeleton />
+              </div>
+            </div>
+
+            {/* Lista de produtos - Skeleton */}
+            <div className="md:col-span-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {Array.from({ length: 12 }).map((_, index) => (
+                  <div key={index} className="w-full">
+                    <ProductCardSkeleton />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </main>
+      }
+    >
+      <ProductsPageContent />
+    </Suspense>
   );
 }

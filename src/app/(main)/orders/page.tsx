@@ -6,7 +6,7 @@ import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import { Order, OrderStatus } from "@/types/order";
 import { PaginatedResponse } from "@/types";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import {
   Select,
   SelectContent,
@@ -23,7 +23,7 @@ interface InfiniteQueryResponse<T> {
   pageParams: number[];
 }
 
-export default function OrdersPage() {
+function OrdersPageContent() {
   const searchParams = useSearchParams();
   const statusParam = searchParams.get("status");
   const [selectedStatus, setSelectedStatus] = useState<string>(
@@ -186,5 +186,48 @@ export default function OrdersPage() {
         </div>
       </main>
     </RequireAuth>
+  );
+}
+
+export default function OrdersPage() {
+  return (
+    <Suspense
+      fallback={
+        <RequireAuth>
+          <main className="container mx-auto px-4 py-8">
+            <div className="space-y-6">
+              <Link
+                href="/"
+                className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Voltar
+              </Link>
+
+              <div>
+                <h1 className="text-3xl font-bold mb-2">Meus Pedidos</h1>
+                <p className="text-muted-foreground">
+                  Acompanhe o status dos seus pedidos
+                </p>
+              </div>
+
+              <div className="flex justify-end">
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Filtrar por status" />
+                </SelectTrigger>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <OrderCardSkeleton key={index} />
+                ))}
+              </div>
+            </div>
+          </main>
+        </RequireAuth>
+      }
+    >
+      <OrdersPageContent />
+    </Suspense>
   );
 }

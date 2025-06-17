@@ -50,11 +50,13 @@ export const cartService = {
 
   // Métodos para gerenciar o carrinho local
   getLocalCart(): CartItem[] {
+    if (typeof window === "undefined") return [];
     const cart = localStorage.getItem("cart");
     return cart ? JSON.parse(cart) : [];
   },
 
   addToLocalCart(item: CartItem): void {
+    if (typeof window === "undefined") return;
     const cart = this.getLocalCart();
     const existingItem = cart.find((i) => i.productId === item.productId);
     if (existingItem) {
@@ -66,6 +68,7 @@ export const cartService = {
   },
 
   updateLocalCartItem(itemId: string, quantity: number): void {
+    if (typeof window === "undefined") return;
     const cart = this.getLocalCart();
     const item = cart.find((i) => i.id === itemId);
     if (item) {
@@ -75,16 +78,19 @@ export const cartService = {
   },
 
   removeFromLocalCart(itemId: string): void {
+    if (typeof window === "undefined") return;
     const cart = this.getLocalCart();
     const newCart = cart.filter((i) => i.id !== itemId);
     localStorage.setItem("cart", JSON.stringify(newCart));
   },
 
   clearLocalCart(): void {
+    if (typeof window === "undefined") return;
     localStorage.removeItem("cart");
   },
 
   getLocalCartTotal(): number {
+    if (typeof window === "undefined") return 0;
     const cart = this.getLocalCart();
     return cart.reduce((total, item) => total + item.quantity, 0);
   },

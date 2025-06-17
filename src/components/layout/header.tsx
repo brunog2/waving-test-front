@@ -14,11 +14,11 @@ import {
   Shield,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { CartButton } from "@/components/cart/cart-button";
 import { Avatar, AvatarFallback } from "../ui/avatar";
 
-export function Header() {
+function HeaderContent() {
   const { user, signOut } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -246,5 +246,73 @@ export function Header() {
         </div>
       </div>
     </header>
+  );
+}
+
+export function Header() {
+  return (
+    <Suspense
+      fallback={
+        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="container mx-auto px-4">
+            <div className="flex h-16 items-center justify-between gap-4">
+              <nav className="flex items-center gap-6">
+                <Link
+                  href="/"
+                  className="text-sm font-medium transition-colors hover:text-primary"
+                >
+                  Home
+                </Link>
+                <Link
+                  href="/products"
+                  className="text-sm font-medium transition-colors hover:text-primary"
+                >
+                  Produtos
+                </Link>
+                <Link
+                  href="/categories"
+                  className="text-sm font-medium transition-colors hover:text-primary"
+                >
+                  Categorias
+                </Link>
+              </nav>
+
+              <div className="relative w-96">
+                <Input
+                  type="search"
+                  placeholder="Buscar produtos..."
+                  className="pr-10"
+                  disabled
+                />
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                  disabled
+                >
+                  <Search className="h-4 w-4" />
+                </Button>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <ModeToggle />
+                <div className="flex items-center gap-2">
+                  <Link href="/login">
+                    <Button variant="ghost" size="sm">
+                      Entrar
+                    </Button>
+                  </Link>
+                  <Link href="/register">
+                    <Button size="sm">Cadastrar</Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+      }
+    >
+      <HeaderContent />
+    </Suspense>
   );
 }
