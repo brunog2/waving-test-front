@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
 
 export function Navigation() {
   const { user, signOut } = useAuth();
@@ -73,6 +74,9 @@ export function Navigation() {
                 >
                   Register
                 </Link>
+                <Button asChild variant="outline" size="sm">
+                  <Link href="/admin/admin-login">Login Admin</Link>
+                </Button>
               </div>
             )}
           </div>

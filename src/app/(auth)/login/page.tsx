@@ -108,6 +108,11 @@ export default function LoginPage() {
                 Registre-se
               </Link>
             </div>
+            <div className="text-center">
+              <Button asChild variant="outline" size="sm">
+                <Link href="/admin/admin-login">Login Admin</Link>
+              </Button>
+            </div>
           </form>
         </Form>
       </CardContent>

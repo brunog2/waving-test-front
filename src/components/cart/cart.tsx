@@ -41,7 +41,7 @@ export function Cart() {
       }
       const order = await createOrder.mutateAsync(cartProductIds);
       router.push(`/orders/${order.id}`);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Erro ao finalizar compra:", err);
     }
   }

@@ -9,6 +9,7 @@ import api from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { cartService } from "@/services/cart-service";
 import { toast } from "sonner";
+import { InfiniteData } from "@tanstack/react-query";
 
 export function useCartTotal() {
   const { user } = useAuth();
@@ -55,7 +56,7 @@ export function useCart() {
   } = useInfiniteQuery<
     PaginatedResponse<CartItem>,
     Error,
-    PaginatedResponse<CartItem>,
+    InfiniteData<PaginatedResponse<CartItem>>,
     string[],
     number
   >({
@@ -73,7 +74,7 @@ export function useCart() {
 
   // Carrinho da API (se usuário logado) ou localStorage (se não logado)
   const cart: CartItem[] = user
-    ? (cartItemsResponse as any)?.pages?.flatMap(
+    ? cartItemsResponse?.pages?.flatMap(
         (page: PaginatedResponse<CartItem>) => page.data
       ) || []
     : cartService.getLocalCart();
@@ -110,7 +111,7 @@ export function useCart() {
         return cartItem;
       }
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       if (user) {
         // Se usuário logado, atualiza tanto o total quanto os itens
         queryClient.invalidateQueries({ queryKey: ["cart-total"] });
@@ -121,10 +122,10 @@ export function useCart() {
       }
       toast.success("Produto adicionado ao carrinho!");
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       const message =
-        error?.response?.data?.message ||
-        "Erro ao adicionar produto ao carrinho";
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || "Erro ao adicionar produto ao carrinho";
       toast.error(message);
     },
   });

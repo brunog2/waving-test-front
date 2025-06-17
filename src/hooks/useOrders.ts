@@ -54,15 +54,16 @@ export function useCreateOrder() {
   return useMutation({
     mutationFn: (cartProductIds: string[]) =>
       orderService.createOrder(cartProductIds),
-    onSuccess: (order) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cart-items"] });
       queryClient.invalidateQueries({ queryKey: ["cart-total"] });
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       toast.success("Pedido realizado com sucesso!");
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       const message =
-        error?.response?.data?.message || "Erro ao finalizar compra";
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || "Erro ao finalizar compra";
       toast.error(message);
     },
   });

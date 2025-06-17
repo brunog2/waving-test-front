@@ -12,7 +12,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Control } from "react-hook-form";
+import { Control, FieldValues } from "react-hook-form";
 
 interface SelectOption {
   label: string;
@@ -20,7 +20,7 @@ interface SelectOption {
 }
 
 interface FormSelectProps {
-  control: Control<any>;
+  control: Control<FieldValues>;
   name: string;
   label: string;
   options: SelectOption[];

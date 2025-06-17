@@ -7,10 +7,10 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Control } from "react-hook-form";
+import { Control, FieldValues } from "react-hook-form";
 
 interface PriceInputProps {
-  control: Control<any>;
+  control: Control<FieldValues>;
   name: string;
   label: string;
   placeholder?: string;

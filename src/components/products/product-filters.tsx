@@ -8,7 +8,6 @@ import {
   FormItem,
   FormLabel,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -16,16 +15,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { useAllCategories } from "@/hooks/useAllCategories";
 import { NumericFormat } from "react-number-format";
 import { cn } from "@/lib/utils";
-import { formSchema } from "@/hooks/useProductFilters";
 import { useProductFilters, FormValues } from "@/hooks/useProductFilters";
 import { Skeleton } from "@/components/ui/skeleton";
-
-interface ProductFiltersProps {}
 
 export function ProductFiltersSkeleton() {
   return (
@@ -58,14 +52,16 @@ export function ProductFiltersSkeleton() {
   );
 }
 
-export function ProductFilters({}: ProductFiltersProps) {
+export function ProductFilters() {
   const { categories, isLoading: isLoadingCategories } = useAllCategories();
   const { form, applyFilters, clearFilters } = useProductFilters();
 
   const handleSubmit = (values: FormValues) => {
     if (values.sortBy === "relevance") {
-      const { sortBy, ...rest } = values;
-      applyFilters(rest);
+      const rest = Object.fromEntries(
+        Object.entries(values).filter(([key]) => key !== "sortBy")
+      );
+      applyFilters(rest as FormValues);
     } else {
       applyFilters(values);
     }

@@ -1,26 +1,16 @@
 "use client";
 
-import { useCategories } from "@/hooks/useCategories";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { useCart } from "@/hooks/useCart";
-import { Category, Product } from "@/types";
-import { useRef } from "react";
-import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   ProductCard,
   ProductCardSkeleton,
 } from "@/components/products/product-card";
-import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCategories } from "@/hooks/useCategories";
+import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
+import { Category, Product } from "@/types";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import Link from "next/link";
+import { useRef } from "react";
 
 interface CategoryWithProducts extends Category {
   products: Product[];

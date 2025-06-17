@@ -3,7 +3,6 @@
 import { useProduct } from "@/hooks/useProduct";
 import { useComments } from "@/hooks/useComments";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { AlertCircle, ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
