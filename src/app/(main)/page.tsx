@@ -1,51 +1,136 @@
+"use client";
+
+import { useCategories } from "@/hooks/useCategories";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { useCart } from "@/hooks/useCart";
+import { Category, Product } from "@/types";
+import { useRef } from "react";
 import Link from "next/link";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ProductCard } from "@/components/products/product-card";
+import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
+
+interface CategoryWithProducts extends Category {
+  products: Product[];
+}
 
 export default function Home() {
+  const {
+    categories,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useCategories(true);
+  const scrollRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+
+  const { loadMoreRef, isFetchingNextPage: isLoadingMore } = useInfiniteScroll({
+    onLoadMore: fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  });
+
+  const handleScroll = (categoryId: string, direction: "left" | "right") => {
+    const container = scrollRefs.current[categoryId];
+    if (!container) return;
+
+    const scrollAmount = container.clientWidth;
+    const targetScroll =
+      direction === "left"
+        ? container.scrollLeft - scrollAmount
+        : container.scrollLeft + scrollAmount;
+
+    container.scrollTo({
+      left: targetScroll,
+      behavior: "smooth",
+    });
+  };
+
+  if (isLoading || !categories) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-12">
-      {/* Hero Section */}
-      <section className="text-center">
-        <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
-          Welcome to Waving Test
-        </h1>
-        <p className="mt-6 text-lg leading-8 text-gray-600">
-          Discover our amazing products and start shopping today.
-        </p>
-        <div className="mt-10 flex items-center justify-center gap-x-6">
-          <Link
-            href="/products"
-            className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-          >
-            Browse Products
-          </Link>
-          <Link
-            href="/categories"
-            className="text-sm font-semibold leading-6 text-gray-900"
-          >
-            View Categories <span aria-hidden="true">→</span>
-          </Link>
-        </div>
-      </section>
+    <main className="container mx-auto px-4 py-8">
+      <div className="space-y-8">
+        {categories.map((category: CategoryWithProducts) => (
+          <section key={category.id} className="space-y-4">
+            <h2 className="text-2xl font-bold">{category.name}</h2>
+            <div className="relative group">
+              <div
+                ref={(el) => {
+                  scrollRefs.current[category.id] = el;
+                }}
+                className="flex overflow-x-auto gap-4 pb-4 product-list-scroll snap-x snap-mandatory"
+              >
+                {category.products.map((product) => (
+                  <div
+                    key={product.id}
+                    className="snap-start w-[280px] flex-shrink-0"
+                  >
+                    <ProductCard product={product} />
+                  </div>
+                ))}
+                {category.products.length >= 4 && (
+                  <div className="snap-start w-[280px] flex-shrink-0">
+                    <ViewAllProductsCard categoryId={category.id} />
+                  </div>
+                )}
+              </div>
 
-      {/* Featured Categories */}
-      <section>
-        <h2 className="text-2xl font-bold tracking-tight text-gray-900">
-          Featured Categories
-        </h2>
-        <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
-          {/* TODO: Add category cards */}
-        </div>
-      </section>
+              {/* Navigation Buttons */}
+              <button
+                onClick={() => handleScroll(category.id, "left")}
+                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 bg-background border rounded-full p-2 shadow-md hover:bg-accent transition-colors opacity-0 group-hover:opacity-100"
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </button>
 
-      {/* Featured Products */}
-      <section>
-        <h2 className="text-2xl font-bold tracking-tight text-gray-900">
-          Featured Products
-        </h2>
-        <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
-          {/* TODO: Add product cards */}
+              <button
+                onClick={() => handleScroll(category.id, "right")}
+                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 bg-background border rounded-full p-2 shadow-md hover:bg-accent transition-colors opacity-0 group-hover:opacity-100"
+              >
+                <ChevronRight className="h-6 w-6" />
+              </button>
+            </div>
+          </section>
+        ))}
+        <div ref={loadMoreRef} className="h-10">
+          {isLoadingMore && (
+            <div className="flex justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            </div>
+          )}
         </div>
-      </section>
+      </div>
+    </main>
+  );
+}
+
+function ViewAllProductsCard({ categoryId }: { categoryId: string }) {
+  return (
+    <div className="h-full">
+      <Link
+        href={`/products?categoryId=${categoryId}`}
+        className="w-full h-full flex items-center justify-center border-2 border-dashed rounded-lg hover:border-primary/50 transition-colors"
+      >
+        <div className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors">
+          <span>Ver todos os produtos</span>
+          <ChevronRight className="h-4 w-4" />
+        </div>
+      </Link>
     </div>
   );
 }

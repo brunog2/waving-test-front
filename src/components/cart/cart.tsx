@@ -6,14 +6,29 @@ import { Trash2, ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
+import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 
 export function Cart() {
-  const { cart, isLoading, updateCartItem, removeFromCart, clearCart } =
-    useCart();
+  const {
+    cart,
+    isLoading,
+    updateCartItem,
+    removeFromCart,
+    clearCart,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useCart();
+
+  const { loadMoreRef, isFetchingNextPage: isLoadingMore } = useInfiniteScroll({
+    onLoadMore: fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  });
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
+      <div className="container mx-auto py-8 space-y-4">
         <Link
           href="/products"
           className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8"
@@ -48,7 +63,7 @@ export function Cart() {
 
   if (!cart || cart.length === 0) {
     return (
-      <div className="space-y-4">
+      <div className="container mx-auto py-8 space-y-4">
         <Link
           href="/products"
           className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8"
@@ -75,7 +90,7 @@ export function Cart() {
   );
 
   return (
-    <div className="space-y-4">
+    <div className="container mx-auto py-8 space-y-4">
       <Link
         href="/products"
         className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8"
@@ -155,6 +170,17 @@ export function Cart() {
           </Card>
         ))}
       </div>
+
+      {/* Scroll infinito */}
+      {hasNextPage && (
+        <div ref={loadMoreRef} className="h-10 mt-8">
+          {isLoadingMore && (
+            <div className="flex justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="flex justify-between items-center pt-4 border-t">
         <span className="text-xl font-bold">Total:</span>

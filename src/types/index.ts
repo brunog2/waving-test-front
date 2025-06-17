@@ -36,10 +36,15 @@ export interface Category {
 
 export interface CartItem {
   id: string;
-  userId: string;
   productId: string;
+  userId: string;
   quantity: number;
-  product: Product;
+  product: {
+    id: string;
+    name: string;
+    price: number;
+    imageUrl?: string;
+  };
 }
 
 export interface Order {
@@ -94,3 +99,20 @@ export interface Review {
 export interface ProductWithCategory extends Product {
   category: Category;
 }
+
+export interface PaginationMeta {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  meta: PaginationMeta;
+}
+
+// Re-export existing types
+export * from "./cart";

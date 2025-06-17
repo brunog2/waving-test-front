@@ -37,11 +37,6 @@ export function useProductFilters() {
   });
 
   useEffect(() => {
-    console.log(
-      "search params changes",
-      searchParams,
-      searchParams.get("minPrice")
-    );
     form.reset({
       search: searchParams.get("search") || "",
       categoryId: searchParams.get("categoryId") || "all",
@@ -52,7 +47,6 @@ export function useProductFilters() {
         "relevance",
       sortOrder: (searchParams.get("sortOrder") as "asc" | "desc") || undefined,
     });
-    console.log("form values", form.getValues());
   }, [searchParams, form]);
 
   const applyFilters = (values: FormValues) => {

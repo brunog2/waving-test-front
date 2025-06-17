@@ -1,29 +1,87 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CartItem } from "@/types";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  useInfiniteQuery,
+} from "@tanstack/react-query";
+import { CartItem, PaginatedResponse } from "@/types";
 import api from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
-import { cartService } from "@/lib/cart-service";
-import { useEffect } from "react";
+import { cartService } from "@/services/cart-service";
 
-interface CartItemWithPrice extends CartItem {
-  price: number;
+export function useCartTotal() {
+  const { user } = useAuth();
+
+  // Query para buscar quantidade total do carrinho (apenas se usuário logado)
+  const { data: cartTotal, isLoading: isLoadingApi } = useQuery<number>({
+    queryKey: ["cart-total"],
+    queryFn: async () => {
+      return await cartService.getCartTotal();
+    },
+    enabled: !!user, // Só executa se usuário estiver logado
+  });
+
+  const cartTotalCount = user
+    ? cartTotal || 0
+    : cartService.getLocalCartTotal();
+
+  return {
+    cartTotalCount,
+    isLoading: user ? isLoadingApi : false,
+  };
 }
 
 export function useCart() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  const { data: cart, isLoading } = useQuery<CartItem[]>({
-    queryKey: ["cart"],
+  // Query para buscar quantidade total do carrinho (apenas se usuário logado)
+  const { data: cartTotal, isLoading: isLoadingApi } = useQuery<number>({
+    queryKey: ["cart-total"],
     queryFn: async () => {
-      if (user) {
-        const { data } = await api.get("/cart");
-        return data;
-      } else {
-        return cartService.getLocalCart();
-      }
+      return await cartService.getCartTotal();
+    },
+    enabled: !!user, // Só executa se usuário estiver logado
+  });
+
+  // Query infinita para buscar itens do carrinho (apenas se usuário logado)
+  const {
+    data: cartItemsResponse,
+    isLoading: isLoadingCartItems,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery<
+    PaginatedResponse<CartItem>,
+    Error,
+    PaginatedResponse<CartItem>,
+    string[],
+    number
+  >({
+    queryKey: ["cart-items"],
+    queryFn: async ({ pageParam = 1 }) => {
+      return await cartService.getCart(pageParam, 10);
+    },
+    enabled: !!user, // Só executa se usuário estiver logado
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      if (!lastPage?.meta?.hasNextPage) return undefined;
+      return lastPage.meta.page + 1;
     },
   });
+
+  // Carrinho da API (se usuário logado) ou localStorage (se não logado)
+  const cart: CartItem[] = user
+    ? (cartItemsResponse as any)?.pages?.flatMap(
+        (page: PaginatedResponse<CartItem>) => page.data
+      ) || []
+    : cartService.getLocalCart();
+
+  const cartTotalCount = user
+    ? cartTotal || 0
+    : cartService.getLocalCartTotal();
+
+  const isLoading = user ? isLoadingApi || isLoadingCartItems : false;
 
   const addToCart = useMutation({
     mutationFn: async ({
@@ -34,10 +92,11 @@ export function useCart() {
       quantity: number;
     }) => {
       if (user) {
-        const { data } = await api.post("/cart", { productId, quantity });
+        // Usuário logado: adiciona diretamente na API
+        const { data } = await api.post("/cart/items", { productId, quantity });
         return data;
       } else {
-        // For local storage, we need to get the product details first
+        // Usuário não logado: salva no localStorage
         const { data: product } = await api.get(`/products/${productId}`);
         const cartItem: CartItem = {
           id: Date.now().toString(),
@@ -51,7 +110,14 @@ export function useCart() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["cart"] });
+      if (user) {
+        // Se usuário logado, atualiza tanto o total quanto os itens
+        queryClient.invalidateQueries({ queryKey: ["cart-total"] });
+        queryClient.invalidateQueries({ queryKey: ["cart-items"] });
+      } else {
+        // Se não logado, força re-render do componente
+        queryClient.setQueryData(["cart-total"], null);
+      }
     },
   });
 
@@ -64,7 +130,7 @@ export function useCart() {
       quantity: number;
     }) => {
       if (user) {
-        const { data } = await api.patch(`/cart/${itemId}`, { quantity });
+        const { data } = await api.put(`/cart/items/${itemId}`, { quantity });
         return data;
       } else {
         cartService.updateLocalCartItem(itemId, quantity);
@@ -72,20 +138,30 @@ export function useCart() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["cart"] });
+      if (user) {
+        queryClient.invalidateQueries({ queryKey: ["cart-total"] });
+        queryClient.invalidateQueries({ queryKey: ["cart-items"] });
+      } else {
+        queryClient.setQueryData(["cart-total"], null);
+      }
     },
   });
 
   const removeFromCart = useMutation({
     mutationFn: async (itemId: string) => {
       if (user) {
-        await api.delete(`/cart/${itemId}`);
+        await api.delete(`/cart/items/${itemId}`);
       } else {
         cartService.removeFromLocalCart(itemId);
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["cart"] });
+      if (user) {
+        queryClient.invalidateQueries({ queryKey: ["cart-total"] });
+        queryClient.invalidateQueries({ queryKey: ["cart-items"] });
+      } else {
+        queryClient.setQueryData(["cart-total"], null);
+      }
     },
   });
 
@@ -98,39 +174,32 @@ export function useCart() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["cart"] });
+      if (user) {
+        queryClient.invalidateQueries({ queryKey: ["cart-total"] });
+        queryClient.invalidateQueries({ queryKey: ["cart-items"] });
+      } else {
+        queryClient.setQueryData(["cart-total"], null);
+      }
     },
   });
 
-  // Sync local cart with API cart when user logs in
-  useEffect(() => {
-    if (user && cart) {
-      const mergedCart = cartService.syncLocalCartWithApi(cart);
-      if (mergedCart.length > 0) {
-        // Add all items from merged cart to API
-        mergedCart.forEach((item: CartItem) => {
-          addToCart.mutate({
-            productId: item.productId,
-            quantity: item.quantity,
-          });
-        });
-      }
-    }
-  }, [user, cart]);
-
-  const total =
-    cart?.reduce(
-      (sum, item) => sum + Number(item.product.price) * item.quantity,
-      0
-    ) ?? 0;
+  const total = cart.reduce(
+    (sum: number, item: CartItem) =>
+      sum + Number(item.product.price) * item.quantity,
+    0
+  );
 
   return {
     cart,
+    cartTotalCount,
     isLoading,
     addToCart,
     updateCartItem,
     removeFromCart,
     clearCart,
     total,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   };
 }

@@ -5,21 +5,40 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ModeToggle } from "@/components/theme/mode-toggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Search, User, LogOut, Package, ChevronDown } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { CartButton } from "@/components/cart/cart-button";
+import { Avatar, AvatarFallback } from "../ui/avatar";
 
 export function Header() {
   const { user, signOut } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const search = searchParams.get("search");
     setSearchTerm(search || "");
   }, [searchParams]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsDropdownOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const handleSearch = () => {
     if (searchTerm.trim()) {
@@ -31,6 +50,19 @@ export function Header() {
     if (e.key === "Enter") {
       handleSearch();
     }
+  };
+
+  const getUserInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const toggleDropdown = () => {
+    setIsDropdownOpen(!isDropdownOpen);
   };
 
   return (
@@ -81,21 +113,68 @@ export function Header() {
             <CartButton />
             <ModeToggle />
             {user ? (
-              <>
-                <Link
-                  href="/orders"
-                  className="text-sm font-medium transition-colors hover:text-primary"
-                >
-                  Meus Pedidos
-                </Link>
+              <div className="relative" ref={dropdownRef}>
                 <Button
                   variant="ghost"
-                  onClick={() => signOut()}
-                  className="text-sm font-medium"
+                  className="flex items-center gap-2 h-8 px-2"
+                  onClick={toggleDropdown}
                 >
-                  Sair
+                  <Avatar className="h-6 w-6">
+                    <AvatarFallback className="text-xs">
+                      {getUserInitials(user.name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <ChevronDown
+                    className={`h-3 w-3 transition-transform ${
+                      isDropdownOpen ? "rotate-180" : ""
+                    }`}
+                  />
                 </Button>
-              </>
+
+                {isDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-56 rounded-md border bg-popover text-popover-foreground shadow-md z-50">
+                    <div className="p-3 border-b">
+                      <p className="text-sm font-medium">{user.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {user.email}
+                      </p>
+                    </div>
+
+                    <div className="p-1">
+                      <Link
+                        href="/profile"
+                        className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-sm hover:bg-accent hover:text-accent-foreground transition-colors"
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        <User className="h-4 w-4" />
+                        <span>Perfil</span>
+                      </Link>
+
+                      <Link
+                        href="/orders"
+                        className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-sm hover:bg-accent hover:text-accent-foreground transition-colors"
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        <Package className="h-4 w-4" />
+                        <span>Meus Pedidos</span>
+                      </Link>
+                    </div>
+
+                    <div className="border-t p-1">
+                      <button
+                        onClick={() => {
+                          signOut();
+                          setIsDropdownOpen(false);
+                        }}
+                        className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-sm hover:bg-accent hover:text-accent-foreground transition-colors text-red-600 hover:text-red-600 w-full text-left"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        <span>Sair</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             ) : (
               <>
                 <Link
