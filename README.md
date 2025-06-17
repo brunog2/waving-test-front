@@ -4,8 +4,8 @@
 
 Aplicação frontend do desafio técnico da Waving, desenvolvida com **Next.js**, **TailwindCSS** e **React Query**, consumindo a [API NestJS](https://github.com/brunog2/waving-test-api).
 
-🔗 **Acesse em produção:** [https://waving-test-front.vercel.app](https://waving-test-front.vercel.app)
-🔗 **Documentação também disponível em:** [https://deepwiki.com/brunog2/waving-test-front](https://deepwiki.com/brunog2/waving-test-front)
+- 🔗 **Acesse em produção:** [https://waving-test-front.vercel.app](https://waving-test-front.vercel.app)
+- 🔗 **Documentação também disponível em:** [https://deepwiki.com/brunog2/waving-test-front](https://deepwiki.com/brunog2/waving-test-front)
 
 ---
 
