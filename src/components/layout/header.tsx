@@ -41,9 +41,15 @@ export function Header() {
   }, []);
 
   const handleSearch = () => {
+    const newSearchParams = new URLSearchParams(searchParams.toString());
+
     if (searchTerm.trim()) {
-      router.push(`/products?search=${encodeURIComponent(searchTerm.trim())}`);
+      newSearchParams.set("search", searchTerm.trim());
+    } else {
+      newSearchParams.delete("search");
     }
+
+    router.push(`/products?${newSearchParams.toString()}`);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
