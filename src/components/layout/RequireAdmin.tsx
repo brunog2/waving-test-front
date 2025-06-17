@@ -9,7 +9,7 @@ export function RequireAdmin({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== "ADMIN")) {
-      router.replace("/admin/admin-login");
+      router.replace("/admin-login");
     }
   }, [user, isLoading, router]);
 
@@ -27,7 +27,15 @@ export function RequireAdmin({ children }: { children: React.ReactNode }) {
   }
 
   if (!user || user.role !== "ADMIN") {
-    return null;
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <p className="text-muted-foreground">Redirecionando...</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return <>{children}</>;

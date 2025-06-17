@@ -110,7 +110,7 @@ export default function LoginPage() {
             </div>
             <div className="text-center">
               <Button asChild variant="outline" size="sm">
-                <Link href="/admin/admin-login">Login Admin</Link>
+                <Link href="/admin-login">Login Admin</Link>
               </Button>
             </div>
           </form>

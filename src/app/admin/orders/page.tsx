@@ -1,191 +1,259 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Search, Eye, ShoppingCart, Filter } from "lucide-react";
 import { useState } from "react";
-import Link from "next/link";
-import { OrderStatusBadge } from "@/components/orders/order-status-badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAdminOrders } from "@/hooks/useAdminOrders";
+import { formatCurrency } from "@/lib/utils";
+import {
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  Package,
+  User,
+  Calendar,
+  DollarSign,
+} from "lucide-react";
 
-// Dados mockados - em produção viriam da API
-const mockOrders = [
-  {
-    id: "ORD-001",
-    customer: "João Silva",
-    email: "joao@email.com",
-    total: 299.9,
-    status: "PENDING",
-    createdAt: "2024-01-15T10:30:00Z",
-    items: 3,
-  },
-  {
-    id: "ORD-002",
-    customer: "Maria Santos",
-    email: "maria@email.com",
-    total: 450.0,
-    status: "PROCESSING",
-    createdAt: "2024-01-15T09:15:00Z",
-    items: 2,
-  },
-  {
-    id: "ORD-003",
-    customer: "Pedro Costa",
-    email: "pedro@email.com",
-    total: 199.9,
-    status: "SHIPPED",
-    createdAt: "2024-01-14T16:45:00Z",
-    items: 1,
-  },
-  {
-    id: "ORD-004",
-    customer: "Ana Oliveira",
-    email: "ana@email.com",
-    total: 750.0,
-    status: "DELIVERED",
-    createdAt: "2024-01-14T14:20:00Z",
-    items: 4,
-  },
+const statusOptions = [
+  { value: "all", label: "Todos os status" },
+  { value: "PENDING", label: "Pendente" },
+  { value: "PROCESSING", label: "Processando" },
+  { value: "SHIPPED", label: "Enviado" },
+  { value: "DELIVERED", label: "Entregue" },
+  { value: "CANCELLED", label: "Cancelado" },
 ];
 
+const statusColors = {
+  PENDING: "bg-yellow-100 text-yellow-800",
+  PROCESSING: "bg-blue-100 text-blue-800",
+  SHIPPED: "bg-purple-100 text-purple-800",
+  DELIVERED: "bg-green-100 text-green-800",
+  CANCELLED: "bg-red-100 text-red-800",
+};
+
+const statusLabels = {
+  PENDING: "Pendente",
+  PROCESSING: "Processando",
+  SHIPPED: "Enviado",
+  DELIVERED: "Entregue",
+  CANCELLED: "Cancelado",
+};
+
 export default function AdminOrdersPage() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [orders] = useState(mockOrders);
+  const [page, setPage] = useState(1);
+  const [status, setStatus] = useState("all");
+  const [search, setSearch] = useState("");
+  const limit = 10;
 
-  const filteredOrders = orders.filter((order) => {
-    const matchesSearch =
-      order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.email.toLowerCase().includes(searchTerm.toLowerCase());
+  const {
+    data: ordersData,
+    isLoading,
+    error,
+  } = useAdminOrders(page, limit, status === "all" ? undefined : status);
 
-    const matchesStatus =
-      statusFilter === "all" || order.status === statusFilter;
-
-    return matchesSearch && matchesStatus;
-  });
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(value);
+  const handleSearch = () => {
+    setPage(1);
+    // Implementar busca se necessário
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+  const handleStatusChange = (value: string) => {
+    setStatus(value);
+    setPage(1);
   };
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">Pedidos</h1>
+          <p className="text-muted-foreground">Erro ao carregar pedidos</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Pedidos</h1>
-          <p className="text-muted-foreground">
-            Visualize todos os pedidos realizados pelos clientes
-          </p>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold">Pedidos</h1>
+        <p className="text-muted-foreground">
+          Gerencie todos os pedidos da loja
+        </p>
       </div>
 
-      {/* Filtros e busca */}
+      {/* Filtros */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ShoppingCart className="h-5 w-5" />
-            Buscar Pedidos
-          </CardTitle>
+          <CardTitle>Filtros</CardTitle>
+          <CardDescription>
+            Filtre os pedidos por status e outros critérios
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <div className="flex-1">
               <Input
-                placeholder="Buscar por ID, cliente ou email..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                placeholder="Buscar pedidos..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onKeyUp={(e) => e.key === "Enter" && handleSearch()}
               />
             </div>
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-muted-foreground" />
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-3 py-2 border rounded-md text-sm"
-              >
-                <option value="all">Todos os status</option>
-                <option value="PENDING">Pendente</option>
-                <option value="PROCESSING">Em Processamento</option>
-                <option value="SHIPPED">Enviado</option>
-                <option value="DELIVERED">Entregue</option>
-                <option value="CANCELLED">Cancelado</option>
-              </select>
-            </div>
+            <Select value={status} onValueChange={handleStatusChange}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                {statusOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button onClick={handleSearch}>
+              <Search className="h-4 w-4 mr-2" />
+              Buscar
+            </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Lista de pedidos */}
+      {/* Lista de Pedidos */}
       <Card>
         <CardHeader>
-          <CardTitle>Pedidos ({filteredOrders.length})</CardTitle>
+          <CardTitle>Lista de Pedidos</CardTitle>
+          <CardDescription>
+            {ordersData
+              ? `${ordersData.meta.total} pedidos encontrados`
+              : "Carregando..."}
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {filteredOrders.map((order) => (
-              <div
-                key={order.id}
-                className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 bg-blue-100 rounded flex items-center justify-center">
-                    <ShoppingCart className="h-6 w-6 text-blue-600" />
+          {isLoading || !ordersData ? (
+            <div className="space-y-4">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="flex items-center space-x-4 p-4 border rounded-lg"
+                >
+                  <Skeleton className="h-12 w-12 rounded-full" />
+                  <div className="space-y-2 flex-1">
+                    <Skeleton className="h-4 w-48" />
+                    <Skeleton className="h-4 w-32" />
                   </div>
-                  <div>
-                    <h3 className="font-medium">{order.id}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {order.customer} • {order.email}
-                    </p>
-                    <div className="flex items-center gap-4 mt-1">
-                      <span className="text-sm font-medium">
-                        {formatCurrency(order.total)}
-                      </span>
-                      <span className="text-sm text-muted-foreground">
-                        {order.items} {order.items === 1 ? "item" : "itens"}
-                      </span>
-                      <span className="text-sm text-muted-foreground">
-                        {formatDate(order.createdAt)}
-                      </span>
+                  <Skeleton className="h-8 w-24" />
+                </div>
+              ))}
+            </div>
+          ) : ordersData.data.length === 0 ? (
+            <div className="text-center py-8">
+              <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <p className="text-muted-foreground">Nenhum pedido encontrado</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {ordersData.data.map((order) => (
+                <div
+                  key={order.id}
+                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className="flex flex-col">
+                      <div className="flex items-center space-x-2">
+                        <Package className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">
+                          #{order.id.slice(0, 8)}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                        <User className="h-3 w-3" />
+                        <span>Cliente ID: {order.userId.slice(0, 8)}</span>
+                        <span>•</span>
+                        <span>
+                          {order.items.length}{" "}
+                          {order.items.length === 1 ? "item" : "itens"}
+                        </span>
+                      </div>
                     </div>
                   </div>
+
+                  <div className="flex items-center space-x-4">
+                    <div className="text-right">
+                      <div className="flex items-center space-x-2">
+                        <DollarSign className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">
+                          {formatCurrency(parseFloat(order.total))}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                        <Calendar className="h-3 w-3" />
+                        <span>
+                          {new Date(order.createdAt).toLocaleDateString(
+                            "pt-BR"
+                          )}
+                        </span>
+                      </div>
+                    </div>
+
+                    <Badge className={statusColors[order.status]}>
+                      {statusLabels[order.status]}
+                    </Badge>
+
+                    <Button variant="outline" size="sm">
+                      Ver detalhes
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <OrderStatusBadge
-                    status={
-                      order.status as
-                        | "PENDING"
-                        | "PROCESSING"
-                        | "SHIPPED"
-                        | "DELIVERED"
-                        | "CANCELLED"
-                    }
-                  />
-                  <Button variant="ghost" size="icon" asChild>
-                    <Link href={`/admin/orders/${order.id}`}>
-                      <Eye className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Paginação */}
+          {ordersData && ordersData.meta.totalPages > 1 && (
+            <div className="flex items-center justify-between mt-6">
+              <p className="text-sm text-muted-foreground">
+                Página {page} de {ordersData.meta.totalPages}
+              </p>
+              <div className="flex space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(page - 1)}
+                  disabled={page <= 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Anterior
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(page + 1)}
+                  disabled={page >= ordersData.meta.totalPages}
+                >
+                  Próxima
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
               </div>
-            ))}
-          </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

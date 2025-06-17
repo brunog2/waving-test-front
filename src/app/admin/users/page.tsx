@@ -1,180 +1,238 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Search, Eye, Users, Filter, User, Shield } from "lucide-react";
 import { useState } from "react";
-import Link from "next/link";
-
-// Dados mockados - em produção viriam da API
-const mockUsers = [
-  {
-    id: "1",
-    name: "João Silva",
-    email: "joao@email.com",
-    role: "CUSTOMER",
-    createdAt: "2024-01-10T10:30:00Z",
-    orders: 5,
-  },
-  {
-    id: "2",
-    name: "Maria Santos",
-    email: "maria@email.com",
-    role: "CUSTOMER",
-    createdAt: "2024-01-08T09:15:00Z",
-    orders: 3,
-  },
-  {
-    id: "3",
-    name: "Admin User",
-    email: "admin@email.com",
-    role: "ADMIN",
-    createdAt: "2024-01-01T14:20:00Z",
-    orders: 0,
-  },
-  {
-    id: "4",
-    name: "Pedro Costa",
-    email: "pedro@email.com",
-    role: "CUSTOMER",
-    createdAt: "2024-01-12T16:45:00Z",
-    orders: 2,
-  },
-];
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAdminUsers } from "@/hooks/useAdminUsers";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  Users,
+  User,
+  Mail,
+  Calendar,
+  Shield,
+  Edit,
+  Trash2,
+  AlertTriangle,
+} from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 export default function AdminUsersPage() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [roleFilter, setRoleFilter] = useState("all");
-  const [users] = useState(mockUsers);
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const limit = 10;
 
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch =
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase());
+  const { data: users, isLoading, error } = useAdminUsers(page, limit);
+  const { user: currentUser } = useAuth();
 
-    const matchesRole = roleFilter === "all" || user.role === roleFilter;
-
-    return matchesSearch && matchesRole;
-  });
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
+  const handleSearch = () => {
+    setPage(1);
+    // Implementar busca se necessário
   };
 
-  const getRoleLabel = (role: string) => {
-    return role === "ADMIN" ? "Administrador" : "Cliente";
+  const getUserInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
   };
 
-  const getRoleColor = (role: string) => {
-    return role === "ADMIN"
-      ? "bg-red-100 text-red-800"
-      : "bg-blue-100 text-blue-800";
+  const handleDeleteUser = (userId: string, userName: string) => {
+    // Verifica se é o próprio usuário
+    if (currentUser && userId === currentUser.id) {
+      alert("Você não pode excluir sua própria conta!");
+      return;
+    }
+
+    // Aqui você pode implementar a lógica de exclusão
+    if (confirm(`Tem certeza que deseja excluir o usuário "${userName}"?`)) {
+      console.log("Excluindo usuário:", userId);
+      // Implementar chamada da API de exclusão
+    }
   };
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">Clientes</h1>
+          <p className="text-muted-foreground">Erro ao carregar clientes</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Usuários</h1>
-          <p className="text-muted-foreground">
-            Visualize todos os usuários cadastrados
-          </p>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold">Clientes</h1>
+        <p className="text-muted-foreground">
+          Gerencie todos os clientes da loja
+        </p>
       </div>
 
-      {/* Filtros e busca */}
+      {/* Filtros */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Buscar Usuários
-          </CardTitle>
+          <CardTitle>Filtros</CardTitle>
+          <CardDescription>Busque clientes por nome ou email</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <div className="flex-1">
               <Input
-                placeholder="Buscar por nome ou email..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                placeholder="Buscar clientes..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onKeyPress={(e) => e.key === "Enter" && handleSearch()}
               />
             </div>
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-muted-foreground" />
-              <select
-                value={roleFilter}
-                onChange={(e) => setRoleFilter(e.target.value)}
-                className="px-3 py-2 border rounded-md text-sm"
-              >
-                <option value="all">Todos os tipos</option>
-                <option value="ADMIN">Administradores</option>
-                <option value="CUSTOMER">Clientes</option>
-              </select>
-            </div>
+            <Button onClick={handleSearch}>
+              <Search className="h-4 w-4 mr-2" />
+              Buscar
+            </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Lista de usuários */}
+      {/* Lista de Clientes */}
       <Card>
         <CardHeader>
-          <CardTitle>Usuários ({filteredUsers.length})</CardTitle>
+          <CardTitle>Lista de Clientes</CardTitle>
+          <CardDescription>
+            {users ? `${users.length} clientes encontrados` : "Carregando..."}
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {filteredUsers.map((user) => (
-              <div
-                key={user.id}
-                className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 bg-gray-200 rounded-full flex items-center justify-center">
-                    {user.role === "ADMIN" ? (
-                      <Shield className="h-6 w-6 text-gray-600" />
-                    ) : (
-                      <User className="h-6 w-6 text-gray-600" />
-                    )}
+          {isLoading || !users ? (
+            <div className="space-y-4">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="flex items-center space-x-4 p-4 border rounded-lg"
+                >
+                  <Skeleton className="h-12 w-12 rounded-full" />
+                  <div className="space-y-2 flex-1">
+                    <Skeleton className="h-4 w-48" />
+                    <Skeleton className="h-4 w-32" />
                   </div>
-                  <div>
-                    <h3 className="font-medium">{user.name}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {user.email}
-                    </p>
-                    <div className="flex items-center gap-4 mt-1">
-                      <span
-                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getRoleColor(
-                          user.role
-                        )}`}
+                  <Skeleton className="h-8 w-24" />
+                </div>
+              ))}
+            </div>
+          ) : users.length === 0 ? (
+            <div className="text-center py-8">
+              <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <p className="text-muted-foreground">Nenhum cliente encontrado</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {users.map((user) => {
+                const isCurrentUser = currentUser && user.id === currentUser.id;
+
+                return (
+                  <div
+                    key={user.id}
+                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center space-x-4">
+                      <Avatar className="h-12 w-12">
+                        <AvatarFallback>
+                          {getUserInitials(user.name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col">
+                        <div className="flex items-center space-x-2">
+                          <User className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-medium">{user.name}</span>
+                          {user.role === "ADMIN" && (
+                            <Shield className="h-4 w-4 text-blue-600" />
+                          )}
+                          {isCurrentUser && (
+                            <Badge variant="outline" className="text-xs">
+                              Você
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                          <Mail className="h-3 w-3" />
+                          <span>{user.email}</span>
+                          <span>•</span>
+                          <Calendar className="h-3 w-3" />
+                          <span>
+                            {new Date(user.createdAt).toLocaleDateString(
+                              "pt-BR"
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-4">
+                      <Badge
+                        className={
+                          user.role === "ADMIN"
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-gray-100 text-gray-800"
+                        }
                       >
-                        {getRoleLabel(user.role)}
-                      </span>
-                      <span className="text-sm text-muted-foreground">
-                        {user.orders} {user.orders === 1 ? "pedido" : "pedidos"}
-                      </span>
-                      <span className="text-sm text-muted-foreground">
-                        Cadastrado em {formatDate(user.createdAt)}
-                      </span>
+                        {user.role === "ADMIN" ? "Administrador" : "Cliente"}
+                      </Badge>
+
+                      <div className="flex space-x-1">
+                        <Button variant="ghost" size="sm">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteUser(user.id, user.name)}
+                          disabled={isCurrentUser || false}
+                          title={
+                            isCurrentUser
+                              ? "Você não pode excluir sua própria conta"
+                              : "Excluir usuário"
+                          }
+                          className={
+                            isCurrentUser ? "opacity-50 cursor-not-allowed" : ""
+                          }
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" asChild>
-                    <Link href={`/admin/users/${user.id}`}>
-                      <Eye className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Aviso sobre exclusão */}
+          {currentUser && (
+            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="flex items-center space-x-2 text-yellow-800">
+                <AlertTriangle className="h-4 w-4" />
+                <span className="text-sm font-medium">
+                  Você não pode excluir sua própria conta por questões de
+                  segurança.
+                </span>
               </div>
-            ))}
-          </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

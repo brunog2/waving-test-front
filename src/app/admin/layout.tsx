@@ -1,4 +1,5 @@
 import { RequireAdmin } from "@/components/layout/RequireAdmin";
+import { AdminSidebar } from "@/components/layout/AdminSidebar";
 
 export default function AdminLayout({
   children,
@@ -7,7 +8,12 @@ export default function AdminLayout({
 }) {
   return (
     <RequireAdmin>
-      <div className="min-h-screen bg-background">{children}</div>
+      <div className="flex h-screen bg-gray-50">
+        <AdminSidebar />
+        <main className="flex-1 overflow-auto">
+          <div className="p-6">{children}</div>
+        </main>
+      </div>
     </RequireAdmin>
   );
 }

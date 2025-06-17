@@ -5,7 +5,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ModeToggle } from "@/components/theme/mode-toggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, User, LogOut, Package, ChevronDown } from "lucide-react";
+import {
+  Search,
+  User,
+  LogOut,
+  Package,
+  ChevronDown,
+  Shield,
+} from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { CartButton } from "@/components/cart/cart-button";
@@ -71,6 +78,8 @@ export function Header() {
     setIsDropdownOpen(!isDropdownOpen);
   };
 
+  const isAdmin = user?.role === "ADMIN";
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4">
@@ -94,6 +103,15 @@ export function Header() {
             >
               Categorias
             </Link>
+            {isAdmin && (
+              <Link
+                href="/admin/dashboard"
+                className="text-sm font-medium transition-colors hover:text-primary flex items-center gap-1"
+              >
+                <Shield className="h-4 w-4" />
+                Admin
+              </Link>
+            )}
           </nav>
 
           <div className="relative w-96">
@@ -116,7 +134,7 @@ export function Header() {
           </div>
 
           <div className="flex items-center gap-4">
-            <CartButton />
+            {!isAdmin && <CartButton />}
             <ModeToggle />
             {user ? (
               <div className="relative" ref={dropdownRef}>
@@ -144,26 +162,46 @@ export function Header() {
                       <p className="text-xs text-muted-foreground">
                         {user.email}
                       </p>
+                      {isAdmin && (
+                        <p className="text-xs text-blue-600 font-medium mt-1">
+                          Administrador
+                        </p>
+                      )}
                     </div>
 
                     <div className="p-1">
-                      <Link
-                        href="/profile"
-                        className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-sm hover:bg-accent hover:text-accent-foreground transition-colors"
-                        onClick={() => setIsDropdownOpen(false)}
-                      >
-                        <User className="h-4 w-4" />
-                        <span>Perfil</span>
-                      </Link>
+                      {!isAdmin && (
+                        <>
+                          <Link
+                            href="/profile"
+                            className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-sm hover:bg-accent hover:text-accent-foreground transition-colors"
+                            onClick={() => setIsDropdownOpen(false)}
+                          >
+                            <User className="h-4 w-4" />
+                            <span>Perfil</span>
+                          </Link>
 
-                      <Link
-                        href="/orders"
-                        className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-sm hover:bg-accent hover:text-accent-foreground transition-colors"
-                        onClick={() => setIsDropdownOpen(false)}
-                      >
-                        <Package className="h-4 w-4" />
-                        <span>Meus Pedidos</span>
-                      </Link>
+                          <Link
+                            href="/orders"
+                            className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-sm hover:bg-accent hover:text-accent-foreground transition-colors"
+                            onClick={() => setIsDropdownOpen(false)}
+                          >
+                            <Package className="h-4 w-4" />
+                            <span>Meus Pedidos</span>
+                          </Link>
+                        </>
+                      )}
+
+                      {isAdmin && (
+                        <Link
+                          href="/admin/dashboard"
+                          className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-sm hover:bg-accent hover:text-accent-foreground transition-colors"
+                          onClick={() => setIsDropdownOpen(false)}
+                        >
+                          <Shield className="h-4 w-4" />
+                          <span>Painel Admin</span>
+                        </Link>
+                      )}
                     </div>
 
                     <div className="border-t p-1">
@@ -194,6 +232,13 @@ export function Header() {
                   className="text-sm font-medium transition-colors hover:text-primary"
                 >
                   Registrar
+                </Link>
+                <Link
+                  href="/admin-login"
+                  className="text-sm font-medium transition-colors hover:text-primary flex items-center gap-1"
+                >
+                  <Shield className="h-4 w-4" />
+                  Admin
                 </Link>
               </>
             )}

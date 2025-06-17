@@ -47,7 +47,7 @@ export function Navigation() {
                 </Link>
                 {user.role === "ADMIN" && (
                   <Link
-                    href="/admin"
+                    href="/admin/dashboard"
                     className="text-gray-500 hover:text-gray-900"
                   >
                     Admin
@@ -75,7 +75,7 @@ export function Navigation() {
                   Register
                 </Link>
                 <Button asChild variant="outline" size="sm">
-                  <Link href="/admin/admin-login">Login Admin</Link>
+                  <Link href="/admin-login">Login Admin</Link>
                 </Button>
               </div>
             )}

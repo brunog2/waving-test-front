@@ -41,10 +41,11 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem("token");
-      // Só redireciona se não estiver já na página de login
+      // Só redireciona se não estiver já na página de login ou login admin
       if (
         typeof window !== "undefined" &&
-        !window.location.pathname.startsWith("/login")
+        !window.location.pathname.startsWith("/login") &&
+        !window.location.pathname.startsWith("/admin-login")
       ) {
         window.location.href = "/login";
       }
