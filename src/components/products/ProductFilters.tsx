@@ -15,39 +15,34 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useAllCategories } from "@/hooks/useAllCategories";
 import { NumericFormat } from "react-number-format";
-import { cn } from "@/lib/utils";
+import { useAllCategories } from "@/hooks/useAllCategories";
 import { useProductFilters } from "@/hooks/useProductFilters";
+import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { ProductFiltersFormData } from "@/hooks/useProductFilters";
 
 export function ProductFiltersSkeleton() {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Skeleton className="h-4 w-20" />
-        <Skeleton className="h-9 w-full" />
+        <Skeleton className="h-4 w-16" />
+        <Skeleton className="h-10 w-full" />
       </div>
-
-      <div className="space-y-2">
-        <Skeleton className="h-4 w-24" />
-        <Skeleton className="h-9 w-full" />
-      </div>
-
-      <div className="space-y-2">
-        <Skeleton className="h-4 w-24" />
-        <Skeleton className="h-9 w-full" />
-      </div>
-
       <div className="space-y-2">
         <Skeleton className="h-4 w-20" />
-        <Skeleton className="h-9 w-full" />
+        <Skeleton className="h-10 w-full" />
       </div>
-
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-20" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-16" />
+        <Skeleton className="h-10 w-full" />
+      </div>
       <div className="space-y-2 pt-2">
-        <Skeleton className="h-9 w-full" />
-        <Skeleton className="h-9 w-full" />
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
       </div>
     </div>
   );
@@ -57,12 +52,17 @@ export function ProductFilters() {
   const { categories, isLoading: isLoadingCategories } = useAllCategories();
   const { form, applyFilters, clearFilters } = useProductFilters();
 
-  const handleSubmit = (values: ProductFiltersFormData) => {
+  const handleSubmit = (values: {
+    categoryId?: string;
+    minPrice?: string;
+    maxPrice?: string;
+    sortBy?: "relevance" | "price" | "name";
+    sortOrder?: "asc" | "desc";
+  }) => {
     if (values.sortBy === "relevance") {
-      const rest = Object.fromEntries(
-        Object.entries(values).filter(([key]) => key !== "sortBy")
-      );
-      applyFilters(rest as ProductFiltersFormData);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { sortBy, ...rest } = values;
+      applyFilters(rest);
     } else {
       applyFilters(values);
     }

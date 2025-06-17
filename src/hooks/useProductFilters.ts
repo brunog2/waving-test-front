@@ -1,14 +1,9 @@
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
+import { z } from "zod";
 
-export type SortBy = "price" | "name";
-export type SortOrder = "asc" | "desc";
-
-export const formSchema = z.object({
-  search: z.string().optional(),
+const productFiltersSchema = z.object({
   categoryId: z.string().optional(),
   minPrice: z.string().optional(),
   maxPrice: z.string().optional(),
@@ -16,16 +11,15 @@ export const formSchema = z.object({
   sortOrder: z.enum(["asc", "desc"]).optional(),
 });
 
-export type FormValues = z.infer<typeof formSchema>;
+export type ProductFiltersFormData = z.infer<typeof productFiltersSchema>;
 
 export function useProductFilters() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<ProductFiltersFormData>({
+    resolver: zodResolver(productFiltersSchema),
     defaultValues: {
-      search: searchParams.get("search") || "",
       categoryId: searchParams.get("categoryId") || "all",
       minPrice: searchParams.get("minPrice") || "",
       maxPrice: searchParams.get("maxPrice") || "",
@@ -36,37 +30,50 @@ export function useProductFilters() {
     },
   });
 
-  useEffect(() => {
-    form.reset({
-      search: searchParams.get("search") || "",
-      categoryId: searchParams.get("categoryId") || "all",
-      minPrice: searchParams.get("minPrice") || "",
-      maxPrice: searchParams.get("maxPrice") || "",
-      sortBy:
-        (searchParams.get("sortBy") as "relevance" | "price" | "name") ||
-        "relevance",
-      sortOrder: (searchParams.get("sortOrder") as "asc" | "desc") || undefined,
-    });
-  }, [searchParams, form]);
+  const applyFilters = (values: {
+    categoryId?: string;
+    minPrice?: string;
+    maxPrice?: string;
+    sortBy?: "relevance" | "price" | "name";
+    sortOrder?: "asc" | "desc";
+  }) => {
+    const params = new URLSearchParams(searchParams.toString());
 
-  const applyFilters = (values: FormValues) => {
-    const newSearchParams = new URLSearchParams();
+    if (values.categoryId && values.categoryId !== "all") {
+      params.set("categoryId", values.categoryId);
+    } else {
+      params.delete("categoryId");
+    }
 
-    if (values.search) newSearchParams.set("search", values.search);
-    if (values.categoryId && values.categoryId !== "all")
-      newSearchParams.set("categoryId", values.categoryId);
-    if (values.minPrice) newSearchParams.set("minPrice", values.minPrice);
-    if (values.maxPrice) newSearchParams.set("maxPrice", values.maxPrice);
-    if (values.sortBy && values.sortBy !== "relevance")
-      newSearchParams.set("sortBy", values.sortBy);
-    if (values.sortOrder) newSearchParams.set("sortOrder", values.sortOrder);
+    if (values.minPrice) {
+      params.set("minPrice", values.minPrice);
+    } else {
+      params.delete("minPrice");
+    }
 
-    router.push(`/products?${newSearchParams.toString()}`);
+    if (values.maxPrice) {
+      params.set("maxPrice", values.maxPrice);
+    } else {
+      params.delete("maxPrice");
+    }
+
+    if (values.sortBy && values.sortBy !== "relevance") {
+      params.set("sortBy", values.sortBy);
+    } else {
+      params.delete("sortBy");
+    }
+
+    if (values.sortOrder) {
+      params.set("sortOrder", values.sortOrder);
+    } else {
+      params.delete("sortOrder");
+    }
+
+    router.push(`/products?${params.toString()}`);
   };
 
   const clearFilters = () => {
     form.reset({
-      search: "",
       categoryId: "all",
       minPrice: "",
       maxPrice: "",

@@ -7,7 +7,7 @@ import {
 import {
   ProductFilters,
   ProductFiltersSkeleton,
-} from "@/components/products/product-filters";
+} from "@/components/products/ProductFilters";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import { useProducts } from "@/hooks/useProducts";
 import { Product } from "@/types";
