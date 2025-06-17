@@ -10,6 +10,7 @@ import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import { useCreateOrder } from "@/hooks/useOrders";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function Cart() {
   const {
@@ -31,8 +32,16 @@ export function Cart() {
 
   const createOrder = useCreateOrder();
   const router = useRouter();
+  const { user } = useAuth();
 
   async function handleCheckout() {
+    // Verifica se o usuário está logado
+    if (!user) {
+      toast.info("Faça login para finalizar sua compra");
+      router.push("/login");
+      return;
+    }
+
     try {
       const cartProductIds = cart.map((item) => item.id);
       if (cartProductIds.length === 0) {

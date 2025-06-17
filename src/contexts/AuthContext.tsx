@@ -9,15 +9,32 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  authService,
-  type LoginCredentials,
-  type SignUpCredentials,
-  type User,
-  type AuthResponse,
-} from "@/services/auth-service";
 import { useNotification } from "./NotificationContext";
 import { cartService } from "@/services/cart-service";
+import api from "@/lib/api";
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: "ADMIN" | "CUSTOMER";
+}
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+export interface SignUpCredentials {
+  name: string;
+  email: string;
+  password: string;
+}
+
+export interface AuthResponse {
+  access_token: string;
+  user: User;
+}
 
 interface AuthContextType {
   user: User | null;
@@ -42,6 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const syncLocalCartWithApi = async () => {
     const localCart = cartService.getLocalCart();
+    console.log("SYNCING LOCAL CART WITH API", localCart);
     if (localCart.length > 0) {
       try {
         // Converte itens do localStorage para formato da API
@@ -56,22 +74,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Limpa localStorage após sincronização bem-sucedida
         cartService.clearLocalCart();
 
+        // Aguarda um pouco para garantir que a API processou
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
         // Atualiza tanto o total quanto os itens do carrinho da API
         queryClient.invalidateQueries({ queryKey: ["cart-total"] });
         queryClient.invalidateQueries({ queryKey: ["cart-items"] });
+
+        // Força refetch das queries
+        await queryClient.refetchQueries({ queryKey: ["cart-total"] });
+        await queryClient.refetchQueries({ queryKey: ["cart-items"] });
       } catch (error) {
         console.error("Failed to sync local cart:", error);
+        // Se falhar, não limpa o localStorage para não perder os itens
       }
     } else {
       // Mesmo sem itens para sincronizar, invalida as queries para buscar dados atualizados
       queryClient.invalidateQueries({ queryKey: ["cart-total"] });
       queryClient.invalidateQueries({ queryKey: ["cart-items"] });
+
+      // Força refetch das queries
+      await queryClient.refetchQueries({ queryKey: ["cart-total"] });
+      await queryClient.refetchQueries({ queryKey: ["cart-items"] });
     }
   };
 
   const login = useMutation({
     mutationFn: async (credentials: LoginCredentials) => {
-      const data = await authService.login(credentials);
+      const { data } = await api.post("/auth/login", credentials);
       localStorage.setItem("token", data.access_token);
       localStorage.setItem("user", JSON.stringify(data.user));
       setUser(data.user);
@@ -87,7 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = useMutation({
     mutationFn: async (credentials: SignUpCredentials) => {
-      const data = await authService.signUp(credentials);
+      const { data } = await api.post("/auth/register", credentials);
       localStorage.setItem("token", data.access_token);
       localStorage.setItem("user", JSON.stringify(data.user));
       setUser(data.user);

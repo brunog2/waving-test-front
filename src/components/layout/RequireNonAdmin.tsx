@@ -34,7 +34,9 @@ export function RequireNonAdmin({ children }: { children: React.ReactNode }) {
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <p className="text-muted-foreground">Redirecionando para o painel administrativo...</p>
+            <p className="text-muted-foreground">
+              Redirecionando para o painel administrativo...
+            </p>
           </div>
         </div>
       </div>
@@ -43,4 +45,4 @@ export function RequireNonAdmin({ children }: { children: React.ReactNode }) {
 
   // Se não é admin ou não está logado, mostra o conteúdo
   return <>{children}</>;
-} 
+}

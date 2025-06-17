@@ -11,6 +11,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Product } from "@/types";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 interface AddToCartDialogProps {
   product: Product;
@@ -29,8 +32,16 @@ export function AddToCartDialog({
 }: AddToCartDialogProps) {
   const [quantity, setQuantity] = useState(1);
   const { addToCart } = useCart();
+  const { user } = useAuth();
+  const router = useRouter();
 
   const handleAddToCart = () => {
+    if (mode === "buy" && !user) {
+      toast.info("Faça login para finalizar sua compra");
+      onOpenChange(false);
+      router.push("/login");
+    }
+
     addToCart.mutate(
       { productId: product.id, quantity },
       {

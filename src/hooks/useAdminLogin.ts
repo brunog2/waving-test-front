@@ -1,23 +1,19 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import api from "@/lib/api";
+import { loginSchema } from "@/schemas/auth";
 import { useNotification } from "@/contexts/NotificationContext";
-import { authService } from "@/services/auth-service";
 import { z } from "zod";
 
-const adminLoginSchema = z.object({
-  email: z.string().min(1, "Email é obrigatório").email("Email inválido"),
-  password: z.string().min(1, "Senha é obrigatória"),
-});
-
-type AdminLoginFormData = z.infer<typeof adminLoginSchema>;
+type AdminLoginFormData = z.infer<typeof loginSchema>;
 
 export function useAdminLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const { success, error: showError } = useNotification();
 
   const form = useForm<AdminLoginFormData>({
-    resolver: zodResolver(adminLoginSchema),
+    resolver: zodResolver(loginSchema),
     defaultValues: {
       email: "",
       password: "",
@@ -26,9 +22,9 @@ export function useAdminLogin() {
 
   const onSubmit = async (data: AdminLoginFormData) => {
     try {
-      const response = await authService.login(data);
+      const response = await api.post("/auth/login", data);
 
-      if (response.user.role !== "ADMIN") {
+      if (response.data.user.role !== "ADMIN") {
         showError(
           "Acesso negado. Apenas administradores podem acessar o painel administrativo."
         );
@@ -36,8 +32,8 @@ export function useAdminLogin() {
         return;
       }
 
-      localStorage.setItem("token", response.access_token);
-      localStorage.setItem("user", JSON.stringify(response.user));
+      localStorage.setItem("token", response.data.access_token);
+      localStorage.setItem("user", JSON.stringify(response.data.user));
 
       success("Login administrativo realizado com sucesso!");
       window.location.href = "/admin/dashboard";

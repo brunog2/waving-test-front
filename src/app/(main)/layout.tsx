@@ -7,11 +7,11 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   return (
-    <RequireNonAdmin>
-      <div className="relative flex min-h-screen flex-col">
-        <Header />
+    <div className="relative flex min-h-screen flex-col">
+      <Header />
+      <RequireNonAdmin>
         <main className="flex-1">{children}</main>
-      </div>
-    </RequireNonAdmin>
+      </RequireNonAdmin>
+    </div>
   );
 }

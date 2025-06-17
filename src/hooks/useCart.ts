@@ -21,6 +21,10 @@ export function useCartTotal() {
       return await cartService.getCartTotal();
     },
     enabled: !!user, // Só executa se usuário estiver logado
+    staleTime: 0, // Sempre considera os dados como stale para garantir atualização
+    refetchOnWindowFocus: true, // Refetch quando a janela ganha foco
+    refetchOnMount: true, // Refetch quando o componente monta
+    refetchOnReconnect: true, // Refetch quando reconecta
   });
 
   const cartTotalCount = user
@@ -44,6 +48,10 @@ export function useCart() {
       return await cartService.getCartTotal();
     },
     enabled: !!user, // Só executa se usuário estiver logado
+    staleTime: 0, // Sempre considera os dados como stale para garantir atualização
+    refetchOnWindowFocus: true, // Refetch quando a janela ganha foco
+    refetchOnMount: true, // Refetch quando o componente monta
+    refetchOnReconnect: true, // Refetch quando reconecta
   });
 
   // Query infinita para buscar itens do carrinho (apenas se usuário logado)
@@ -70,6 +78,10 @@ export function useCart() {
       if (!lastPage?.meta?.hasNextPage) return undefined;
       return lastPage.meta.page + 1;
     },
+    staleTime: 0, // Sempre considera os dados como stale para garantir atualização
+    refetchOnWindowFocus: true, // Refetch quando a janela ganha foco
+    refetchOnMount: true, // Refetch quando o componente monta
+    refetchOnReconnect: true, // Refetch quando reconecta
   });
 
   // Carrinho da API (se usuário logado) ou localStorage (se não logado)

@@ -56,6 +56,7 @@ export const cartService = {
   },
 
   addToLocalCart(item: CartItem): void {
+    console.log("adding", item);
     if (typeof window === "undefined") return;
     const cart = this.getLocalCart();
     const existingItem = cart.find((i) => i.productId === item.productId);
