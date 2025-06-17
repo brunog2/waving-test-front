@@ -1,7 +1,5 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
-import { useNotification } from "@/contexts/NotificationContext";
 import { loginSchema, registerSchema } from "@/schemas/auth";
 import { z } from "zod";
 import { useAuth } from "@/contexts/AuthContext";

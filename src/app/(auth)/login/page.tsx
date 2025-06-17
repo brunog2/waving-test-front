@@ -17,7 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useLoginForm } from "@/hooks/useAuthForms";
 import { AuthLayout } from "@/components/auth/AuthLayout";
@@ -30,6 +30,15 @@ export default function LoginPage() {
       title="Login"
       description="Entre com suas credenciais para acessar sua conta"
     >
+      <div className="mb-4">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Voltar para home
+        </Link>
+      </div>
       <Card>
         <CardHeader>
           <CardTitle>Entrar</CardTitle>
