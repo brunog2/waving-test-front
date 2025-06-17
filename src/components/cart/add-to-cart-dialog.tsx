@@ -103,13 +103,16 @@ export function AddToCartDialog({
             Cancelar
           </Button>
           <Button onClick={handleAddToCart} disabled={addToCart.isPending}>
-            {addToCart.isPending
-              ? isBuyMode
-                ? "Comprando..."
-                : "Adicionando..."
-              : isBuyMode
-              ? "Comprar"
-              : "Adicionar"}
+            {addToCart.isPending ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                {isBuyMode ? "Comprando..." : "Adicionando..."}
+              </>
+            ) : isBuyMode ? (
+              "Comprar"
+            ) : (
+              "Adicionar"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

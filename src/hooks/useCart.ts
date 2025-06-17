@@ -8,6 +8,7 @@ import { CartItem, PaginatedResponse } from "@/types";
 import api from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { cartService } from "@/services/cart-service";
+import { toast } from "sonner";
 
 export function useCartTotal() {
   const { user } = useAuth();
@@ -109,7 +110,7 @@ export function useCart() {
         return cartItem;
       }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       if (user) {
         // Se usuário logado, atualiza tanto o total quanto os itens
         queryClient.invalidateQueries({ queryKey: ["cart-total"] });
@@ -118,6 +119,13 @@ export function useCart() {
         // Se não logado, força re-render do componente
         queryClient.setQueryData(["cart-total"], null);
       }
+      toast.success("Produto adicionado ao carrinho!");
+    },
+    onError: (error: any) => {
+      const message =
+        error?.response?.data?.message ||
+        "Erro ao adicionar produto ao carrinho";
+      toast.error(message);
     },
   });
 
@@ -130,7 +138,7 @@ export function useCart() {
       quantity: number;
     }) => {
       if (user) {
-        const { data } = await api.put(`/cart/items/${itemId}`, { quantity });
+        const { data } = await api.patch(`/cart/items/${itemId}`, { quantity });
         return data;
       } else {
         cartService.updateLocalCartItem(itemId, quantity);

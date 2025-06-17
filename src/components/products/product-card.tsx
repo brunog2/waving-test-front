@@ -14,14 +14,44 @@ import { AlertCircle } from "lucide-react";
 import { useState } from "react";
 import { RatingStars } from "@/components/ui/rating-stars";
 import { AddToCartDialog } from "@/components/cart/add-to-cart-dialog";
+import { useCart } from "@/hooks/useCart";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ProductCardProps {
   product: Product;
   className?: string;
 }
 
+export function ProductCardSkeleton({ className }: { className?: string }) {
+  return (
+    <Card className={`h-full flex flex-col relative ${className}`}>
+      <CardHeader className="p-4">
+        <Skeleton className="w-full aspect-square rounded-md" />
+      </CardHeader>
+      <CardContent className="p-4 space-y-4 flex-1">
+        <div className="space-y-2">
+          <Skeleton className="h-6 w-3/4" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-2/3" />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-4 w-8" />
+        </div>
+
+        <Skeleton className="h-6 w-20" />
+      </CardContent>
+      <CardFooter className="p-4 pt-0 mt-auto">
+        <Skeleton className="w-full h-10" />
+      </CardFooter>
+    </Card>
+  );
+}
+
 export function ProductCard({ product, className }: ProductCardProps) {
   const [isAddToCartOpen, setIsAddToCartOpen] = useState(false);
+  const { addToCart } = useCart();
   const isAvailable = product.available !== false;
 
   return (
@@ -82,10 +112,19 @@ export function ProductCard({ product, className }: ProductCardProps) {
               e.preventDefault();
               setIsAddToCartOpen(true);
             }}
-            disabled={!isAvailable}
+            disabled={!isAvailable || addToCart.isPending}
             variant={!isAvailable ? "secondary" : "default"}
           >
-            {isAvailable ? "Adicionar ao Carrinho" : "Indisponível"}
+            {addToCart.isPending ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                Adicionando...
+              </>
+            ) : isAvailable ? (
+              "Adicionar ao Carrinho"
+            ) : (
+              "Indisponível"
+            )}
           </Button>
         </CardFooter>
       </Card>

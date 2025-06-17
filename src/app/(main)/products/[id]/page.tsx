@@ -3,16 +3,16 @@
 import { useProduct } from "@/hooks/useProduct";
 import { useComments } from "@/hooks/useComments";
 import { Button } from "@/components/ui/button";
-import { useCart } from "@/hooks/useCart";
-import { useParams, useRouter } from "next/navigation";
+import { Card } from "@/components/ui/card";
+import { AlertCircle, ArrowLeft } from "lucide-react";
 import Image from "next/image";
-import { ArrowLeft, ShoppingCart, Star, AlertCircle } from "lucide-react";
 import Link from "next/link";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useParams, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useState, useRef } from "react";
 import { RatingStars } from "@/components/ui/rating-stars";
 import { AddToCartDialog } from "@/components/cart/add-to-cart-dialog";
+import { useCart } from "@/hooks/useCart";
 
 function ImageZoom({ src, alt }: { src: string | null; alt: string }) {
   const [isZoomed, setIsZoomed] = useState(false);
@@ -72,6 +72,7 @@ export default function ProductPage() {
   const { comments, isLoading: isLoadingComments } = useComments(
     params.id as string
   );
+  const { addToCart } = useCart();
   const [isAddToCartOpen, setIsAddToCartOpen] = useState(false);
   const [isBuyNowOpen, setIsBuyNowOpen] = useState(false);
 
@@ -158,26 +159,36 @@ export default function ProductPage() {
           )}
 
           <div className="flex gap-4">
-            <AddToCartDialog
-              product={product}
-              open={isAddToCartOpen}
-              onOpenChange={setIsAddToCartOpen}
-              mode="add"
-            />
-            <AddToCartDialog
-              product={product}
-              open={isBuyNowOpen}
-              onOpenChange={setIsBuyNowOpen}
-              onSuccess={() => router.push("/cart")}
-              mode="buy"
-            />
+            <Button
+              size="lg"
+              variant="outline"
+              className="flex-1"
+              disabled={!product.available || addToCart.isPending}
+              onClick={() => setIsAddToCartOpen(true)}
+            >
+              {addToCart.isPending ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                  Adicionando...
+                </>
+              ) : (
+                "Adicionar ao Carrinho"
+              )}
+            </Button>
             <Button
               size="lg"
               className="flex-1"
-              disabled={!product.available}
+              disabled={!product.available || addToCart.isPending}
               onClick={() => setIsBuyNowOpen(true)}
             >
-              Comprar Agora
+              {addToCart.isPending ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Comprando...
+                </>
+              ) : (
+                "Comprar Agora"
+              )}
             </Button>
           </div>
         </div>
@@ -205,6 +216,20 @@ export default function ProductPage() {
           ))}
         </div>
       </div>
+
+      <AddToCartDialog
+        product={product}
+        open={isAddToCartOpen}
+        onOpenChange={setIsAddToCartOpen}
+        mode="add"
+      />
+      <AddToCartDialog
+        product={product}
+        open={isBuyNowOpen}
+        onOpenChange={setIsBuyNowOpen}
+        onSuccess={() => router.push("/cart")}
+        mode="buy"
+      />
     </main>
   );
 }

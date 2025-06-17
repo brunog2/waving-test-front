@@ -15,8 +15,12 @@ import { Category, Product } from "@/types";
 import { useRef } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { ProductCard } from "@/components/products/product-card";
+import {
+  ProductCard,
+  ProductCardSkeleton,
+} from "@/components/products/product-card";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface CategoryWithProducts extends Category {
   products: Product[];
@@ -56,9 +60,27 @@ export default function Home() {
 
   if (isLoading || !categories) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
-      </div>
+      <main className="container mx-auto px-4 py-8">
+        <div className="space-y-8">
+          {Array.from({ length: 3 }).map((_, categoryIndex) => (
+            <section key={categoryIndex} className="space-y-4">
+              <Skeleton className="h-8 w-48" />
+              <div className="relative group">
+                <div className="flex overflow-x-auto gap-4 pb-4 product-list-scroll snap-x snap-mandatory">
+                  {Array.from({ length: 4 }).map((_, productIndex) => (
+                    <div
+                      key={productIndex}
+                      className="snap-start w-[280px] flex-shrink-0"
+                    >
+                      <ProductCardSkeleton />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          ))}
+        </div>
+      </main>
     );
   }
 

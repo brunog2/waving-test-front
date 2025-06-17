@@ -47,25 +47,6 @@ export interface CartItem {
   };
 }
 
-export interface Order {
-  id: string;
-  userId: string;
-  status: "PENDING" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED";
-  total: number;
-  createdAt: string;
-  updatedAt: string;
-  items: OrderItem[];
-}
-
-export interface OrderItem {
-  id: string;
-  orderId: string;
-  productId: string;
-  quantity: number;
-  price: number;
-  product: Product;
-}
-
 export interface Comment {
   id: string;
   userId: string;
@@ -116,3 +97,4 @@ export interface PaginatedResponse<T> {
 
 // Re-export existing types
 export * from "./cart";
+export * from "./order";

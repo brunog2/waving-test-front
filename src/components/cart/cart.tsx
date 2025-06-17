@@ -7,6 +7,9 @@ import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
+import { useCreateOrder } from "@/hooks/useOrders";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export function Cart() {
   const {
@@ -25,6 +28,23 @@ export function Cart() {
     hasNextPage,
     isFetchingNextPage,
   });
+
+  const createOrder = useCreateOrder();
+  const router = useRouter();
+
+  async function handleCheckout() {
+    try {
+      const cartProductIds = cart.map((item) => item.id);
+      if (cartProductIds.length === 0) {
+        toast.error("Selecione pelo menos um item do carrinho");
+        return;
+      }
+      const order = await createOrder.mutateAsync(cartProductIds);
+      router.push(`/orders/${order.id}`);
+    } catch (err: any) {
+      console.error("Erro ao finalizar compra:", err);
+    }
+  }
 
   if (isLoading) {
     return (
@@ -106,7 +126,14 @@ export function Cart() {
           onClick={() => clearCart.mutate()}
           disabled={clearCart.isPending}
         >
-          Limpar Carrinho
+          {clearCart.isPending ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              Limpando...
+            </>
+          ) : (
+            "Limpar Carrinho"
+          )}
         </Button>
       </div>
 
@@ -192,8 +219,20 @@ export function Cart() {
         </span>
       </div>
 
-      <Button className="w-full" size="lg">
-        Finalizar Compra
+      <Button
+        className="w-full"
+        size="lg"
+        onClick={handleCheckout}
+        disabled={createOrder.isPending}
+      >
+        {createOrder.isPending ? (
+          <>
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+            Finalizando...
+          </>
+        ) : (
+          "Finalizar Compra"
+        )}
       </Button>
     </div>
   );

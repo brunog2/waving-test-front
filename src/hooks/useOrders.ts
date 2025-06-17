@@ -1,70 +1,69 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Order } from "@/interfaces/order";
-import api from "@/lib/api";
+import {
+  useInfiniteQuery,
+  useQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { Order, OrdersQueryParams } from "@/types/order";
+import { PaginatedResponse } from "@/types";
+import { orderService } from "@/services/order-service";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
-interface OrdersParams {
-  page?: number;
-  limit?: number;
-  status?: string;
-}
+export function useOrders(params: OrdersQueryParams = {}) {
+  const { user } = useAuth();
 
-export function useOrders(params?: OrdersParams) {
-  const queryClient = useQueryClient();
-
-  const { data: orders, isLoading } = useQuery<Order[]>({
+  return useInfiniteQuery<
+    PaginatedResponse<Order>,
+    Error,
+    PaginatedResponse<Order>,
+    (string | OrdersQueryParams)[],
+    number
+  >({
     queryKey: ["orders", params],
-    queryFn: async () => {
-      const { data } = await api.get("/orders");
-      return data;
+    queryFn: async ({ pageParam = 1 }) => {
+      return await orderService.getOrders({
+        ...params,
+        page: pageParam,
+        limit: params.limit || 10,
+      });
+    },
+    enabled: !!user,
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      if (!lastPage?.meta?.hasNextPage) return undefined;
+      return lastPage.meta.page + 1;
     },
   });
-
-  const createOrder = useMutation({
-    mutationFn: async (
-      orderData: Omit<Order, "id" | "status" | "createdAt">
-    ) => {
-      const { data } = await api.post("/orders", orderData);
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["orders"] });
-    },
-  });
-
-  const updateOrderStatus = useMutation({
-    mutationFn: async ({
-      id,
-      status,
-    }: {
-      id: string;
-      status: Order["status"];
-    }) => {
-      const { data } = await api.patch(`/orders/${id}`, { status });
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["orders"] });
-    },
-  });
-
-  return {
-    orders: orders ?? [],
-    total: orders?.length || 0,
-    isLoading,
-    createOrder,
-    updateOrderStatus,
-  };
 }
 
-export function useOrder(id: string) {
-  const { data, isLoading } = useQuery({
-    queryKey: ["order", id],
-    queryFn: () => api.get(`/orders/${id}`),
-    enabled: !!id,
-  });
+export function useOrder(orderId: string) {
+  const { user } = useAuth();
 
-  return {
-    order: data,
-    isLoading,
-  };
+  return useQuery<Order, Error>({
+    queryKey: ["order", orderId],
+    queryFn: async () => {
+      return await orderService.getOrder(orderId);
+    },
+    enabled: !!user && !!orderId,
+  });
+}
+
+export function useCreateOrder() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (cartProductIds: string[]) =>
+      orderService.createOrder(cartProductIds),
+    onSuccess: (order) => {
+      queryClient.invalidateQueries({ queryKey: ["cart-items"] });
+      queryClient.invalidateQueries({ queryKey: ["cart-total"] });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      toast.success("Pedido realizado com sucesso!");
+    },
+    onError: (error: any) => {
+      const message =
+        error?.response?.data?.message || "Erro ao finalizar compra";
+      toast.error(message);
+    },
+  });
 }
